@@ -199,13 +199,15 @@ class Failure:
     safe_detail: str | None = None
     retryable: bool = False
 
+
 @dataclass(frozen=True)
 class Result[T]:
     value: T | None
     failure: Failure | None
 
+
 class Clock(Protocol):
-    def utc_now(self) -> datetime: ...       # aware UTC
+    def utc_now(self) -> datetime: ...  # aware UTC
     def monotonic(self) -> float: ...
 ```
 
@@ -251,6 +253,7 @@ class WatermarkPayload:
     creator_id: CreatorId
     created_at: UtcTimestamp
 
+
 def serialize_payload(fields: Mapping[str, object]) -> Result[bytes]: ...
 def parse_payload(data: bytes) -> PayloadParseResult: ...
 ```
@@ -274,10 +277,12 @@ HEADER_SIZE = 13
 MAGIC = b"PRVN"
 SCHEMA_VERSION = 1
 
+
 def payload_capacity(width: int, height: int) -> int: ...
 def build_header(payload: bytes) -> bytes: ...
-def embed(rgb: NDArray[np.uint8], alpha: NDArray[np.uint8] | None,
-          payload: bytes) -> Result[EmbeddedImage]: ...
+def embed(
+    rgb: NDArray[np.uint8], alpha: NDArray[np.uint8] | None, payload: bytes
+) -> Result[EmbeddedImage]: ...
 def extract(rgb: NDArray[np.uint8]) -> ExtractionResult: ...
 ```
 
@@ -314,8 +319,12 @@ An image with magic but impossible structure is corrupt. Bit/array operations ma
 
 ```python
 class ForgeService:
-    def prepare(self, upload: BinaryIO, metadata: CreatorMetadata, clock: Clock) -> Result[ForgeArtifact]: ...
-    def register(self, artifact: ForgeArtifact, approved: CreatorMetadata) -> Result[ForgeOutcome]: ...
+    def prepare(
+        self, upload: BinaryIO, metadata: CreatorMetadata, clock: Clock
+    ) -> Result[ForgeArtifact]: ...
+    def register(
+        self, artifact: ForgeArtifact, approved: CreatorMetadata
+    ) -> Result[ForgeOutcome]: ...
 ```
 
 `prepare` validates, decodes, hashes, samples payload time once, serializes, capacity-checks, embeds, PNG round-trip verifies, and returns volatile bytes plus a registration command. `register` opens a UoW and performs create/reuse/conflict semantics. The download widget is rendered only from a successful `ForgeOutcome` whose registry record fields match the payload. Filename is a sanitized source stem plus `.provenance.png`; path separators/control characters are removed. A failure drops artifact bytes and leaves download unavailable.
@@ -329,14 +338,17 @@ class UnitOfWork(Protocol):
     whitelist: WhitelistRepository
     audits: AuditRepository
     operations: OperationRepository
+
     def commit(self) -> None: ...
     def rollback(self) -> None: ...
+
 
 class AssetRepository(Protocol):
     def get(self, asset_hash: AssetHash) -> RegisteredAsset | None: ...
     def register_or_reuse(self, command: RegisterAsset) -> RegistrationOutcome: ...
     def deletion_counts(self, asset_hash: AssetHash) -> DeletionCounts: ...
     def delete_if_preview_matches(self, preview: DeletionPreview) -> DeleteOutcome: ...
+
 
 class IncidentRepository(Protocol):
     def get(self, incident_id: int) -> Incident | None: ...
@@ -345,10 +357,12 @@ class IncidentRepository(Protocol):
     def list_fair_use(self) -> Sequence[Incident]: ...
     def apply_status_plan(self, plan: IncidentTransitionPlan) -> None: ...
 
+
 class WhitelistRepository(Protocol):
     def exact(self, asset_hash: AssetHash, page_url: NormalizedUrl) -> WhitelistEntry | None: ...
     def upsert_and_mark_fair_use(self, command: MarkFairUse) -> TransitionSet: ...
     def remove_and_reopen(self, command: RemoveFairUse) -> TransitionSet: ...
+
 
 class AuditRepository(Protocol):
     def append(self, event: NewAuditEvent) -> AuditEvent: ...
@@ -385,13 +399,23 @@ A bare domain becomes `https://<domain>/`. Acceptance requires absolute `http`/`
 
 ```python
 class SafeHttpTransport(Protocol):
-    def stream(self, request: SafeRequest, budget: BudgetLease,
-               cancel: CancellationToken) -> Result[SafeResponse]: ...
+    def stream(
+        self, request: SafeRequest, budget: BudgetLease, cancel: CancellationToken
+    ) -> Result[SafeResponse]: ...
+
 
 class PinnedSocketAdapter(requests.adapters.BaseAdapter):
-    def send(self, request: PreparedRequest, *, pinned: Resolution,
-             connect_deadline: float, next_byte_timeout: float,
-             total_deadline: float, stream: bool = True, **kwargs) -> Response: ...
+    def send(
+        self,
+        request: PreparedRequest,
+        *,
+        pinned: Resolution,
+        connect_deadline: float,
+        next_byte_timeout: float,
+        total_deadline: float,
+        stream: bool = True,
+        **kwargs,
+    ) -> Response: ...
 ```
 
 Per attempt sequence:
@@ -482,7 +506,9 @@ The supported python-whois version is pinned and its `WhoisEntry.load(domain, te
 Pure functions build typed previews:
 
 ```python
-def build_credit_template(incident: Incident, attribution: str, reply: str) -> Result[CreditPreview]: ...
+def build_credit_template(
+    incident: Incident, attribution: str, reply: str
+) -> Result[CreditPreview]: ...
 def compile_dmca(inputs: DmcaInputs, evidence: LockedEvidence) -> Result[NoticePreview]: ...
 def fingerprint_preview(kind: str, fields: Mapping[str, str]) -> str: ...
 def open_local_draft(card: DispatchCard) -> Result[DraftAttemptId]: ...
@@ -514,17 +540,20 @@ CreatorId = NewType("CreatorId", str)
 NormalizedUrl = NewType("NormalizedUrl", str)
 UtcTimestamp = NewType("UtcTimestamp", str)
 
+
 class IncidentStatus(Enum):
     DETECTED = "Detected"
     STRIKE_AUTHORIZED = "Strike Authorized"
     FAIR_USE = "Fair Use"
     CREDIT_REQUESTED = "Credit Requested"
 
+
 class ExtractionKind(Enum):
     VERIFIED = "verified"
     NONE = "no_watermark"
     CORRUPT = "corrupt_watermark"
     UNREGISTERED = "valid_unregistered"
+
 
 @dataclass(frozen=True)
 class CreatorMetadata:
@@ -533,6 +562,7 @@ class CreatorMetadata:
     contact_email: str | None
     postal_address: str | None
     rights_statement: str | None
+
 
 @dataclass(frozen=True)
 class RegisteredAsset:
@@ -544,6 +574,7 @@ class RegisteredAsset:
     source_media_type: str
     metadata: CreatorMetadata
 
+
 @dataclass(frozen=True)
 class PageContext:
     title: str | None
@@ -551,6 +582,7 @@ class PageContext:
     figcaption: str | None
     alt: str | None
     ecommerce_evidence: tuple[str, ...]
+
 
 @dataclass(frozen=True)
 class Incident:
@@ -566,6 +598,7 @@ class Incident:
     last_seen_at: UtcTimestamp
     status: IncidentStatus
 
+
 @dataclass(frozen=True)
 class WhitelistEntry:
     id: int
@@ -575,6 +608,7 @@ class WhitelistEntry:
     created_at: UtcTimestamp
     modified_at: UtcTimestamp
     related_incident_id: int | None
+
 
 @dataclass(frozen=True)
 class AuditEvent:

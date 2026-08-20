@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Provenance local runtime data (Registry, diagnostics, scratch output)
+.provenance/
+provenance-home/
+*.sqlite3
+*.sqlite3-journal

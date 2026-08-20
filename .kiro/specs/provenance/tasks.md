@@ -6,106 +6,106 @@ Implement Provenance as a Python package with a thin Streamlit shell, pure domai
 
 ## Tasks
 
-- [ ] 1. Establish the Python project and deterministic toolchain
-  - [ ] 1.1 Create the package skeleton and pin production dependencies
+- [x] 1. Establish the Python project and deterministic toolchain
+  - [x] 1.1 Create the package skeleton and pin production dependencies
     - Create the `provenance` package boundaries from the design, the Streamlit entry point, package metadata, and one-shot application/test scripts.
     - Pin exact compatible versions of Python, Streamlit, Pillow, NumPy, requests, beautifulsoup4, and python-whois; disable telemetry, analytics, cloud persistence, remote logging, and environment-proxy inheritance by default.
     - Add configuration that keeps local Registry and runtime artifacts outside the source package and does not introduce production fixtures or synthetic evidence providers.
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 17.1, 17.2_
-  - [ ] 1.2 Add pinned development and test tooling
+  - [x] 1.2 Add pinned development and test tooling
     - Pin Hypothesis and the unit, integration, browser, accessibility, lint, and type-check tools needed by the design.
     - Configure one-shot test commands, temporary test data locations, strict type checking, and test markers that exclude opt-in live smoke checks from deterministic validation.
     - Add a startup/import smoke test proving the composition root cannot import test fixtures, fake clocks, mock resolvers, or synthetic evidence modules.
     - _Requirements: 1.2, 1.5, 1.6, 17.1, 17.2, 20.1-20.20_
 
-- [ ] 2. Implement typed domain foundations and Forge input validation
-  - [ ] 2.1 Create domain models, failures, clocks, and side-effect protocols
+- [x] 2. Implement typed domain foundations and Forge input validation
+  - [x] 2.1 Create domain models, failures, clocks, and side-effect protocols
     - Implement immutable dataclasses, enums, value objects, typed `Result`/`Failure` values, UTC timestamp formatting, monotonic/UTC clock protocols, cancellation tokens, and Registry/network/draft/logging ports.
     - Represent every specified incident, extraction, scan, infrastructure, confirmation, and operation state without importing Streamlit or infrastructure libraries into domain modules.
     - _Requirements: 1.2, 6.12, 8.5, 10.1-10.4, 11.3, 14.3-14.5, 18.3, 18.7_
-  - [ ] 2.2 Implement metadata validation and bounded image decoding
+  - [x] 2.2 Implement metadata validation and bounded image decoding
     - Implement complete, accumulating validation for file size, decoded format/dimensions/pixels, Creator_ID, display name, contact email, postal address, rights statement, NUL characters, and Unicode code-point limits.
     - Implement Pillow verification/full-load behavior that produces C-contiguous eight-bit RGB plus an optional copied alpha channel, maps all failures to safe categories, and performs no hashing or mutation after rejection.
     - _Requirements: 2.1-2.5, 4.5, 17.4, 19.8_
-  - [ ]* 2.3 Write unit tests for typed models, clocks, validation, and image decoding
+  - [x]* 2.3 Write unit tests for typed models, clocks, validation, and image decoding
     - Cover exact byte/pixel boundaries, PNG/JPEG modes, truncated/corrupt images, decompression failures, all metadata predicates, accumulated errors, UTC second precision, and side-effect-free rejection.
     - Use dedicated tests for safe error details and preserved submitted values.
     - _Requirements: 2.1-2.5, 6.12, 17.6, 19.8_
-  - [ ]* 2.4 Write property test for payload creation time and identity
+  - [x]* 2.4 Write property test for payload creation time and identity
     - **Property 3: Payload creation uses exact validated identity and sampled UTC second**
     - Create `test_property_03_payload_creation.py` and use injected aware UTC clocks.
     - **Validates: Requirements 3.2, 6.12**
-  - [ ]* 2.5 Write property test for complete Forge validation
+  - [x]* 2.5 Write property test for complete Forge validation
     - **Property 13: Forge validation is complete and side-effect free on rejection**
     - Create `test_property_13_forge_validation.py` and generate valid and invalid file/metadata combinations around every boundary.
     - **Validates: Requirements 2.1-2.5**
 
-- [ ] 3. Implement canonical image identity and the strict payload codec
-  - [ ] 3.1 Implement canonical source streaming and Asset_Hash computation
+- [x] 3. Implement canonical image identity and the strict payload codec
+  - [x] 3.1 Implement canonical source streaming and Asset_Hash computation
     - Serialize the exact source marker, unsigned 64-bit big-endian dimensions, and row-major RGB bytes into SHA-256 without including alpha, metadata, encoding, filename, or stride padding.
     - Validate array shape, dtype, range, dimensions, and row traversal before hashing.
     - _Requirements: 3.1, 20.1, 20.2_
-  - [ ] 3.2 Implement payload creation, canonical serialization, and strict parsing
+  - [x] 3.2 Implement payload creation, canonical serialization, and strict parsing
     - Validate exact string fields and timestamp grammar/Gregorian validity; serialize canonical UTF-8 JSON with sorted keys and no insignificant whitespace.
     - Detect invalid UTF-8, multiple/non-object JSON, duplicate/wrong keys, non-string values, noncanonical bytes, and invalid fields without returning partial identity.
     - _Requirements: 3.2-3.8, 20.3, 20.4, 20.10_
-  - [ ]* 3.3 Write unit tests for canonical image and payload vectors
+  - [x]* 3.3 Write unit tests for canonical image and payload vectors
     - Cover known canonical byte/hash vectors, strided-array rejection or normalization policy, years 0001/9999, leap dates, second 59/60, duplicate keys, key order, whitespace, and invalid UTF-8.
     - _Requirements: 3.1-3.8_
-  - [ ]* 3.4 Write property test for canonical image identity equivalence
+  - [x]* 3.4 Write property test for canonical image identity equivalence
     - **Property 1: Canonical image identity equivalence**
     - Create `test_property_01_canonical_identity.py` with equivalent decoded pixels represented by varied encodings, metadata, alpha, and array layouts.
     - **Validates: Requirements 3.1, 20.1**
-  - [ ]* 3.5 Write property test for canonical-source collision retention
+  - [x]* 3.5 Write property test for canonical-source collision retention
     - **Property 2: Canonical source difference collision retention**
     - Create `test_property_02_collision_retention.py`; retain and report any unequal generated canonical byte pair with equal SHA-256 values instead of assuming injectivity.
     - **Validates: Requirements 20.2**
-  - [ ]* 3.6 Write property test for canonical payload round trips
+  - [x]* 3.6 Write property test for canonical payload round trips
     - **Property 4: Canonical payload codec round trip**
     - Create `test_property_04_payload_roundtrip.py` and assert field equality plus byte-for-byte reserialization.
     - **Validates: Requirements 3.3, 3.4, 20.3, 20.4**
-  - [ ]* 3.7 Write property test for identity-safe invalid payload handling
+  - [x]* 3.7 Write property test for identity-safe invalid payload handling
     - **Property 5: Invalid payloads reveal no identity**
     - Create `test_property_05_invalid_payloads.py` with grammar-aware malformed byte strategies.
     - **Validates: Requirements 3.5, 3.6, 3.7, 20.10**
-  - [ ]* 3.8 Write property test for invalid serializer inputs
+  - [x]* 3.8 Write property test for invalid serializer inputs
     - **Property 6: Invalid serializer input emits no bytes**
     - Create `test_property_06_invalid_serializer.py` and verify all applicable field issues are returned.
     - **Validates: Requirements 3.8**
 
-- [ ] 4. Implement the exact LSB watermark engine and lossless PNG boundary
-  - [ ] 4.1 Implement capacity, header, bit packing, embedding, and extraction
+- [x] 4. Implement the exact LSB watermark engine and lossless PNG boundary
+  - [x] 4.1 Implement capacity, header, bit packing, embedding, and extraction
     - Implement the exact 13-byte header, MSB-first byte traversal, row-major RGB-channel traversal, least-significant-bit replacement, capacity checks, CRC-32 validation, and typed No_Watermark/Corrupt_Watermark/payload results.
     - Reject every recognized malformed structure without exposing identity fields or classifying a Registry match.
     - _Requirements: 4.1-4.5, 4.7-4.11_
-  - [ ] 4.2 Implement PNG encoding and round-trip verification
+  - [x] 4.2 Implement PNG encoding and round-trip verification
     - Convert embedded RGB and preserved alpha into an in-memory PNG, reopen it, and byte-compare dimensions, RGB, and alpha before exposing an artifact.
     - Return an exact failure and release incomplete bytes if encoding or verification fails.
     - _Requirements: 4.5, 4.6, 5.1, 5.5, 5.7_
-  - [ ]* 4.3 Write unit tests for watermark vectors and PNG round trips
+  - [x]* 4.3 Write unit tests for watermark vectors and PNG round trips
     - Cover fewer than 32/104 channels, known header/CRC vectors, exact capacity/capacity+1, unsupported versions, impossible lengths, body-bit flips, untouched trailing channels, and alpha preservation.
     - _Requirements: 4.1-4.11, 5.5_
-  - [ ]* 4.4 Write property test for exact header encoding
+  - [x]* 4.4 Write property test for exact header encoding
     - **Property 7: Header encoding is exact**
     - Create `test_property_07_header_encoding.py`.
     - **Validates: Requirements 4.1**
-  - [ ]* 4.5 Write property test for watermark round trips
+  - [x]* 4.5 Write property test for watermark round trips
     - **Property 8: Watermark embedding and extraction round trip**
     - Create `test_property_08_watermark_roundtrip.py`.
     - **Validates: Requirements 4.2, 4.9, 20.5**
-  - [ ]* 4.6 Write property test for lossless embedding invariants
+  - [x]* 4.6 Write property test for lossless embedding invariants
     - **Property 9: Embedding preserves the lossless image invariants**
     - Create `test_property_09_embedding_invariants.py`.
     - **Validates: Requirements 4.3-4.6, 20.6**
-  - [ ]* 4.7 Write property test for the exact capacity boundary
+  - [x]* 4.7 Write property test for the exact capacity boundary
     - **Property 10: Capacity boundary is exact**
     - Create `test_property_10_capacity_boundary.py` and verify exact required/available counts and absence of effects on rejection.
     - **Validates: Requirements 4.7, 4.8, 20.7, 20.8**
-  - [ ]* 4.8 Write property test for recognized corruption
+  - [x]* 4.8 Write property test for recognized corruption
     - **Property 11: Recognized watermark corruption is never a match**
     - Create `test_property_11_recognized_corruption.py`.
     - **Validates: Requirements 4.11, 20.9**
-  - [ ]* 4.9 Write property test for missing magic
+  - [x]* 4.9 Write property test for missing magic
     - **Property 12: Missing magic is No_Watermark**
     - Create `test_property_12_missing_magic.py`.
     - **Validates: Requirements 4.10**
@@ -113,57 +113,57 @@ Implement Provenance as a Python package with a thin Streamlit shell, pure domai
 ### Checkpoint - Ensure all foundational and domain tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Build the SQLite schema, migrations, integrity gate, and unit of work
-  - [ ] 5.1 Implement ordered checksum-verified migrations and schema constraints
+- [x] 5. Build the SQLite schema, migrations, integrity gate, and unit of work
+  - [x] 5.1 Implement ordered checksum-verified migrations and schema constraints
     - Create strict tables, foreign keys, uniqueness/check constraints, binary URL identity, indexes, audit tombstones, operation receipts, and migration version/checksum records.
     - Keep all schema initialization local and deterministic.
     - _Requirements: 1.3, 6.1-6.6, 6.12, 10.5-10.7, 12.1, 12.6, 17.8, 18.7, 18.8_
-  - [ ] 5.2 Implement Registry connection startup and the write integrity gate
+  - [x] 5.2 Implement Registry connection startup and the write integrity gate
     - Enable and verify foreign keys per connection, configure durability/busy behavior, apply migrations transactionally, and run complete integrity and foreign-key checks before enabling writes.
     - Expose read-only diagnostics and reject every mutation when checks are pending, failed, or unavailable.
     - _Requirements: 6.9-6.11, 17.12, 18.11, 18.12_
-  - [ ] 5.3 Implement repositories and explicit SQLite unit-of-work ownership
+  - [x] 5.3 Implement repositories and explicit SQLite unit-of-work ownership
     - Implement typed asset, incident, whitelist, audit, and operation repositories without internal commits.
     - Implement `BEGIN IMMEDIATE`, commit, rollback, sanitized failure mapping, and pre-commit transaction visibility guarantees.
     - _Requirements: 5.2-5.5, 6.7, 6.8, 11.8, 18.10-18.12_
-  - [ ]* 5.4 Write SQLite migration, integrity, isolation, and recovery tests
+  - [x]* 5.4 Write SQLite migration, integrity, isolation, and recovery tests
     - Test migration ordering/checksums, all constraints and indexes, foreign-key activation, failed integrity gates, second-connection visibility, rollback, and subprocess termination before and after commit.
     - _Requirements: 6.1-6.11, 17.11, 18.10-18.12_
-  - [ ]* 5.5 Write property test for failed transaction restoration
+  - [x]* 5.5 Write property test for failed transaction restoration
     - **Property 15: Failed transactions restore the exact prior registry state**
     - Create `test_property_15_transaction_rollback.py` with injected insertion, update, deletion, constraint, and commit failures.
     - **Validates: Requirements 5.5, 6.7, 6.8, 11.8, 17.11, 18.10, 20.16**
 
-- [ ] 6. Implement Registry business semantics and idempotent material actions
-  - [ ] 6.1 Implement creator-bound registration and reuse
+- [x] 6. Implement Registry business semantics and idempotent material actions
+  - [x] 6.1 Implement creator-bound registration and reuse
     - Create/reuse exactly one Registered_Asset by Asset_Hash, preserve original metadata/timestamp on same-creator retries, and reject different-creator conflicts atomically.
     - _Requirements: 5.2-5.4, 6.4, 20.11_
-  - [ ] 6.2 Implement verified detection upsert and incident uniqueness
+  - [x] 6.2 Implement verified detection upsert and incident uniqueness
     - Cross-check both Asset_Hash and Creator_ID, create unique Detected/Fair Use incidents, and update only last-seen/latest context on rediscovery while preserving first-seen.
     - _Requirements: 6.1, 6.5, 10.1-10.7, 18.8_
-  - [ ] 6.3 Implement atomic status/whitelist/audit transitions and operation receipts
+  - [x] 6.3 Implement atomic status/whitelist/audit transitions and operation receipts
     - Revalidate transition plans inside one transaction, append exactly one Audit_Event, persist canonical operation receipts, and return prior outcomes for identical retries.
     - Include strike authorization, credit requested, mark/remove fair use, and explicit dispatch outcome command shapes.
     - _Requirements: 11.6-11.9, 12.1-12.8, 13.3, 16.6-16.8, 18.6-18.8, 18.10_
-  - [ ] 6.4 Implement compare-and-swap asset deletion
+  - [x] 6.4 Implement compare-and-swap asset deletion
     - Build a count/fingerprint preview; under one transaction re-count, delete the asset and dependents only on an exact match, retain audit tombstones, and return a refreshed preview when stale.
     - _Requirements: 17.7-17.11_
-  - [ ]* 6.5 Write Registry business integration tests
+  - [x]* 6.5 Write Registry business integration tests
     - Cover registration conflict/reuse, incident deduplication, exact whitelist scope, status transitions, one-audit semantics, operation retry receipts, stale deletion previews, cascades, and retained audit tombstones.
     - _Requirements: 5.2-5.5, 6.1-6.8, 10.1-10.7, 12.1-12.8, 17.7-17.11, 18.6-18.12_
-  - [ ]* 6.6 Write property test for creator-bound idempotent registration
+  - [x]* 6.6 Write property test for creator-bound idempotent registration
     - **Property 14: Registration is creator-bound and idempotent**
     - Create `test_property_14_registration_idempotency.py`.
     - **Validates: Requirements 5.2-5.4, 6.4, 20.11**
-  - [ ]* 6.7 Write property test for confluent incident detection
+  - [x]* 6.7 Write property test for confluent incident detection
     - **Property 16: Incident detection is confluent and unique**
     - Create `test_property_16_incident_confluence.py` and exercise permutations of zero through 100 detections.
     - **Validates: Requirements 6.5, 10.5, 10.6, 18.8, 20.12**
-  - [ ]* 6.8 Write property test for deletion compare-and-swap
+  - [x]* 6.8 Write property test for deletion compare-and-swap
     - **Property 38: Deletion confirmation is a compare-and-swap**
     - Create `test_property_38_deletion_cas.py`.
     - **Validates: Requirements 17.7, 17.8, 17.10**
-  - [ ]* 6.9 Write property test for atomic retry-idempotent actions
+  - [x]* 6.9 Write property test for atomic retry-idempotent actions
     - **Property 39: Confirmed material actions are atomic and retry-idempotent**
     - Create `test_property_39_material_actions.py`.
     - **Validates: Requirements 18.6, 18.7, 18.8**

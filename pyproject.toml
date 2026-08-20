@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "provenance"
+version = "0.1.0"
+description = "Local-first digital rights management and copyright protection workspace for creators."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.13,<3.14"
+
+# Direct runtime dependencies are pinned exactly and must match requirements.txt.
+dependencies = [
+  "beautifulsoup4==4.15.0",
+  "numpy==2.5.2",
+  "pillow==12.3.0",
+  "python-whois==0.9.6",
+  "requests==2.34.2",
+  "streamlit==1.62.0",
+]
+
+[project.optional-dependencies]
+# Development-only tooling. Never imported by the production composition root.
+dev = [
+  "hypothesis==6.165.10",
+  "mypy==2.3.1",
+  "playwright==1.62.0",
+  "pytest==9.1.1",
+  "ruff==0.16.3",
+  "types-beautifulsoup4==4.12.0.20250516",
+  "types-requests==2.33.0.20260712",
+]
+
+[tool.setuptools.packages.find]
+include = ["provenance*"]
+
+[tool.setuptools.package-data]
+provenance = ["py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+# Package roots live at the repository root, so first-party imports resolve correctly.
+src = ["."]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "ANN", "S", "PT", "RET", "SIM", "TID"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["provenance"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S603", "S607"]
+"scripts/**" = ["S603", "S607"]
+# Queries interpolate only module-level column-list constants and placeholder strings
+# generated from a fixed enum tuple. Every caller-supplied value is bound as a
+# parameter, so S608 cannot distinguish these from real injection.
+"provenance/infrastructure/sqlite/repositories.py" = ["S608"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unreachable = true
+no_implicit_reexport = true
+files = ["provenance", "scripts", "tests"]
+
+[[tool.mypy.overrides]]
+# python-whois ships no type information.
+module = ["whois.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "unit: fast deterministic tests for pure logic",
+  "integration: local integration tests using temporary registries and scripted adapters",
+  "contract: protocol-level adapter contract tests against local scripted servers",
+  "browser: tests that drive a real browser session",
+  "live: opt-in checks that reach user-authorized public networks",
+]
+# Deterministic default run: browser and live suites are opt-in.
+addopts = "-q --strict-markers --strict-config -m 'not live and not browser'"
