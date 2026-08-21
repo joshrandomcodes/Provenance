@@ -104,3 +104,15 @@ def test_a_failed_registry_disables_saving(tmp_path: Path, monkeypatch: pytest.M
     assert "Registry writes: disabled" in rendered
     assert any("startup checks" in message.value for message in app.error)
     assert any("Back up the registry" in warning.value for warning in app.warning)
+
+
+def test_triage_reports_an_empty_registry_without_offering_actions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app = _run(tmp_path / "home", monkeypatch)
+
+    assert not app.exception
+    rendered = " ".join(element.value for element in app.text)
+    assert "No active incidents" in rendered
+    # Nothing can be decided before a scan finds something.
+    assert not any(button.label.startswith("Confirm") for button in app.button)

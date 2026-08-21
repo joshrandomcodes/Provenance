@@ -10,16 +10,25 @@ Verified end to end on a live public page: an image is forged and registered, th
 a GitHub Pages URL discovers it, extracts the watermark, cross-checks the Registry, and
 records one incident with its page context and commerce evidence.
 
-The deterministic gate is green as of this date: ruff lint and format clean across 115
-files, strict mypy clean across 111 source files, and 876 tests passing in about 134
-seconds. Run it with `python scripts\run_checks.py`.
+The deterministic gate is green as of this date: ruff lint and format clean, strict mypy
+clean, and the whole deterministic suite passing in about two minutes. Run it with
+`python scripts\run_checks.py`.
 
-Complete: tasks 1 through 9 in full, 10.1 to 10.4, 11.1 to 11.3, 12.1 to 12.3, 16.2, 16.3.
+Complete: tasks 1 through 9 in full, 10.1 to 10.4, 11.1 to 11.3, 12.1 to 12.3, 13.1, 13.2,
+16.2, 16.3.
 
-Not started: task 13 (triage, fair use, credit, deletion flows), task 14 (DNS and WHOIS),
-task 15 (DMCA notices and local draft dispatch), 16.1 (versioned SessionModel and reducers),
-16.4 (Incident Triage tab), 16.5 (accessibility bridge), task 17 (redacted diagnostics),
-task 18 (composition root hardening and release gate).
+Not started: 13.3 (credit request templates and delivery), 13.4 (asset deletion preview and
+confirmation), task 14 (DNS and WHOIS), task 15 (DMCA notices and local draft dispatch),
+16.1 (versioned SessionModel and reducers), 16.5 (accessibility bridge), task 17 (redacted
+diagnostics), task 18 (composition root hardening and release gate).
+
+16.4 is partially implemented. The Incident Triage tab is real: it lists active and
+fair-use incidents, shows one incident's complete recorded evidence, previews exactly what
+a decision would change, and commits Mark Fair Use and Remove Fair Use behind a
+fingerprinted confirmation. The strike, dispatch, and deletion views in the same task are
+absent, so requirement 11.5 is only partly met: a Detected incident is offered Mark Fair
+Use, and not Strike Authorized or Request Credit. Those are labelled as unimplemented in
+the tab rather than shown as controls that would misrepresent what happens.
 
 Deliberately still open, with reasons:
 
@@ -28,11 +37,12 @@ Deliberately still open, with reasons:
   robots rules, redirect revalidation. Missing: proxy environment variables, TLS handshake
   failure, mixed public and private answer sets, IPv4-mapped private peers, cancellation
   mid-stream.
-- Twenty-one of the design's 40 property suites exist, contributing 71 of the 876 tests:
-  suites 1 to 17, 20, 21, 38, and 39. Six unwritten suites belong to tasks that are
-  otherwise complete: 18, 19, 22, 23, 24, 25. The behaviour each of those six covers is
-  exercised by example-based tests instead. The remaining 13 unwritten suites belong to
-  tasks 13 through 18, which have not started.
+- Twenty-one of the design's 40 property suites exist: suites 1 to 17, 20, 21, 38, and 39.
+  Eight unwritten suites belong to tasks that are otherwise complete: 18, 19, 22, 23, 24,
+  25, 26, 27. The behaviour each of those covers is exercised by example-based tests
+  instead, including exact whitelist scope and fair-use upsert and removal, which
+  `tests/test_triage_service.py` covers by example. The remaining 11 unwritten suites
+  belong to tasks that have not started.
 - 16.1 was satisfied minimally. Web Radar keeps its state in `ScanSession` plus a few
   `st.session_state` keys rather than the versioned `SessionModel` the design specifies.
 
@@ -332,11 +342,11 @@ Known product limits that the README must state plainly:
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 13. Implement incident triage, fair-use, credit, and deletion application flows
-  - [ ] 13.1 Implement incident evidence review and confirmation previews
+  - [x] 13.1 Implement incident evidence review and confirmation previews
     - Build active/fair-use views, selected-incident evidence models, side-by-side representation or labeled placeholders, available actions by status, legal-evidence labels, and before/after effect previews.
     - Keep cancellation/stale/failure paths on the selected evidence and expose retry without mutation.
     - _Requirements: 11.1-11.9, 21.4, 21.6_
-  - [ ] 13.2 Implement exact-scope fair-use application commands
+  - [x] 13.2 Implement exact-scope fair-use application commands
     - Validate rationale, preview upsert/removal effects, invoke atomic Registry plans, suppress exact matching incidents, and reopen only unresolved exact-scope Fair Use incidents as Detected on removal.
     - _Requirements: 12.1-12.8, 18.6-18.8_
   - [ ] 13.3 Implement credit request templates, confirmation, and user-controlled opening

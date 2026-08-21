@@ -40,8 +40,12 @@ is recorded as an incident. Alongside a match, Provenance keeps the page context
 to that image: the title, the nearest heading, the caption, the alt text, and any commerce
 wording such as a price or an add-to-cart control.
 
-**Incident Triage** is where a confirmed match becomes a decision. This tab is not built yet;
-see [Current state](#current-state).
+**Incident Triage** is where a confirmed match becomes a decision. It lists active incidents
+and fair-use ones separately, shows everything recorded about the one you select, and lets you
+mark a use as fair, or take that back later. Nothing is written until you review a preview of
+exactly what would change and confirm it. The preview is fingerprinted, so if the incident or
+your rationale changes after you reviewed it, the confirmation is refused and you are asked to
+look again.
 
 ### Key features
 
@@ -50,6 +54,10 @@ see [Current state](#current-state).
   is reported as corruption, never as a match.
 - Lossless PNG output, verified against the source before download.
 - Two-fact verification. Asset hash and creator ID must both agree with the registry.
+- Fair-use scope is exact. An entry covers one asset and one byte-exact page address, so a
+  neighbouring page, or the same path in different case, is never suppressed.
+- Every decision is previewed, fingerprinted, confirmed, then committed with one audit event
+  and an idempotency receipt, so a double click cannot record the same thing twice.
 - Every outbound request resolves DNS itself, connects to one pinned address, and compares
   `getpeername()` against the pinned answer before writing a single request byte. Only public
   unicast addresses are accepted, and every redirect hop repeats the whole check.
@@ -173,6 +181,23 @@ requires the asset in your own registry, which is what step 4 of
 Scanning `localhost` or a private address is refused on purpose. The resolver accepts only
 public unicast addresses, which is what stops the scanner being pointed at your own network.
 
+### Record a decision
+
+1. Open **Incident Triage**. Verified matches appear under **Active incidents**.
+2. Pick an incident to see everything recorded about it: both addresses, the asset hash, the
+   creator ID in the watermark and the one on record, the watermark checksum, the registration
+   and discovery timestamps, the page context, and any commerce wording, quoted verbatim.
+3. To accept a use, write a rationale and press **Review marking this fair use**. You get a
+   preview naming the current status, the proposed status, every incident whose status would
+   move, the fair-use entry that would be written, and the audit record. Nothing is stored yet.
+4. Press **Confirm** to commit, or **Cancel** to walk away with nothing changed. Editing the
+   rationale after a review invalidates it, and you will be asked to review again.
+5. Marked incidents move to the **Fair use** list. **Review removing fair use** takes it back
+   and returns the affected incidents to Detected. It authorizes nothing.
+
+Neither image is displayed side by side, and the tab says why: the registry stores your image's
+identity rather than its pixels, and scraped image bytes are never written to disk at all.
+
 ## Costs and rate limits
 
 **There are no API costs.** Provenance calls no third-party or paid service. It talks only to
@@ -211,8 +236,8 @@ macOS and Linux:
 .venv/bin/python scripts/run_checks.py
 ```
 
-As of 21 August 2026 that reports ruff clean across 115 files, strict mypy clean across 111
-source files, and **876 tests passing** in about two and a quarter minutes.
+As of 21 August 2026 that reports ruff lint and format clean, strict mypy clean under
+`--strict`, and the whole deterministic suite passing in roughly two minutes.
 
 Tests only:
 
@@ -234,16 +259,17 @@ idempotency. `.hypothesis/` holds the local example database and is gitignored.
 
 Honest accounting, because a demo should not imply more than exists.
 
-**Working end to end:** The Forge, Web Radar, and the whole domain, storage, and network stack
-beneath them. The core loop is verified against a real public page, not only against tests.
+**Working end to end:** The Forge, Web Radar, Incident Triage with the fair-use decision, and
+the whole domain, storage, and network stack beneath them. The core loop is verified against a
+real public page, not only against tests.
 
-**Not built yet:** the Incident Triage tab renders its heading and a notice saying the workflow
-is not implemented. The registry operations underneath it exist and are tested, including
-exact-scope fair-use marking, removal with reopen, and status transitions, but no interface is
-wired to them yet. Also unbuilt: DNS and WHOIS lookups for a scanned host, DMCA notice
-templates, and the local `mailto:` draft dispatch. Task status is tracked in
-[`.kiro/specs/provenance/tasks.md`](.kiro/specs/provenance/tasks.md), which lists what is
-complete, what is deliberately open, and why.
+**Not built yet:** Incident Triage offers Mark Fair Use and Remove Fair Use, and nothing else.
+Strike authorization and credit requests are named in the tab as unimplemented rather than
+shown as controls, because a button that flipped a status without the workflow behind it would
+misrepresent what the tool does. Also unbuilt: DNS and WHOIS lookups for a scanned host, DMCA
+notice templates, the local `mailto:` draft dispatch, and the asset deletion flow. Task status
+is tracked in [`.kiro/specs/provenance/tasks.md`](.kiro/specs/provenance/tasks.md), which lists
+what is complete, what is deliberately open, and why.
 
 `python-whois` and `playwright` are pinned for that planned work and are not imported by the
 application today.
@@ -361,7 +387,8 @@ Everything needed is free and in this repository.
 4. To see a **Verified** match, forge your own image and scan a page you control. Watermark any
    PNG or JPEG in The Forge, download the result, publish it somewhere public you are
    authorised to use, and scan that address. The registry entry created by the Forge is what
-   turns the extracted payload into a verified match.
+   turns the extracted payload into a verified match. That match then appears in **Incident
+   Triage**, where the fair-use decision can be previewed and committed.
 5. To confirm the tests pass rather than taking this README's word for it, run
    [Testing](#testing). One command, about two and a quarter minutes, no network access.
 

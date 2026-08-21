@@ -14,7 +14,9 @@ from __future__ import annotations
 from provenance.application.cross_validation import DetectionCrossValidator
 from provenance.application.forge import ForgeService
 from provenance.application.image_analysis import ImageAnalyzer
+from provenance.application.operations import MaterialActionRunner
 from provenance.application.scan import ScanService
+from provenance.application.triage import TriageService
 from provenance.infrastructure.clock import SystemClock
 from provenance.infrastructure.image_decoder import PillowImageDecoder
 from provenance.infrastructure.network.pinned_transport import (
@@ -61,6 +63,7 @@ def build_dashboard(settings: RuntimeSettings) -> Dashboard:
         status=registry.status,
         forge=forge,
         scanner=build_scanner(settings, adapter, clock),
+        triage=TriageService(adapter, MaterialActionRunner(adapter, clock), clock),
         clock=clock,
     )
 

@@ -12,21 +12,19 @@ import streamlit as st
 
 from provenance.application.forge import ForgeService
 from provenance.application.scan_session import ScanRunner
+from provenance.application.triage import TriageService
 from provenance.domain.time import Clock
 from provenance.infrastructure.sqlite.connection import RegistryStatus
 from provenance.settings import APPLICATION_VERSION, RuntimeSettings
 from provenance.ui import safe_render
 from provenance.ui.forge_view import render_forge_tab
 from provenance.ui.radar_view import render_radar_tab
+from provenance.ui.triage_view import render_triage_tab
 
 FORGE_TAB_LABEL: Final = "The Forge"
 RADAR_TAB_LABEL: Final = "Web Radar"
 TRIAGE_TAB_LABEL: Final = "Incident Triage"
 TAB_LABELS: Final = (FORGE_TAB_LABEL, RADAR_TAB_LABEL, TRIAGE_TAB_LABEL)
-
-_PENDING_NOTICE: Final = (
-    "This workflow is not implemented yet. The feature arrives in a later implementation task."
-)
 
 _SCOPE_NOTICE: Final = (
     "Provenance assists evidence collection and notice preparation. It does not provide "
@@ -42,6 +40,7 @@ class Dashboard:
     status: RegistryStatus
     forge: ForgeService
     scanner: ScanRunner
+    triage: TriageService
     clock: Clock
 
 
@@ -62,11 +61,7 @@ def render_dashboard(dashboard: Dashboard) -> None:
         )
 
     with triage_tab:
-        st.header(TRIAGE_TAB_LABEL)
-        safe_render.caption(
-            "Review evidence and record fair-use, credit, or strike decisions yourself."
-        )
-        st.text(_PENDING_NOTICE)
+        render_triage_tab(dashboard.triage, writes_enabled=dashboard.status.writable)
 
     _render_local_status(dashboard)
 
