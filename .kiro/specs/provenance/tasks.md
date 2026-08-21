@@ -4,6 +4,49 @@
 
 Implement Provenance as a Python package with a thin Streamlit shell, pure domain services, explicit side-effect ports, bounded live-network adapters, and a transaction-safe local SQLite registry. Each prompt below builds on earlier work and leaves its code integrated through stable interfaces. Automated tests are placed beside the behavior they validate; optional property and integration test tasks may be skipped for a faster MVP, but the final release gate expects the complete suite.
 
+## Implementation status, 21 August 2026
+
+Verified end to end on a live public page: an image is forged and registered, then a scan of
+a GitHub Pages URL discovers it, extracts the watermark, cross-checks the Registry, and
+records one incident with its page context and commerce evidence.
+
+The deterministic gate is green as of this date: ruff lint and format clean across 115
+files, strict mypy clean across 111 source files, and 876 tests passing in about 134
+seconds. Run it with `python scripts\run_checks.py`.
+
+Complete: tasks 1 through 9 in full, 10.1 to 10.4, 11.1 to 11.3, 12.1 to 12.3, 16.2, 16.3.
+
+Not started: task 13 (triage, fair use, credit, deletion flows), task 14 (DNS and WHOIS),
+task 15 (DMCA notices and local draft dispatch), 16.1 (versioned SessionModel and reducers),
+16.4 (Incident Triage tab), 16.5 (accessibility bridge), task 17 (redacted diagnostics),
+task 18 (composition root hardening and release gate).
+
+Deliberately still open, with reasons:
+
+- 10.5 contract tests are partial. Covered: pinning, rebinding, nonpublic addresses, DNS
+  failure, declared-length and streaming limits, deadlines, `Connection: close`, Host header,
+  robots rules, redirect revalidation. Missing: proxy environment variables, TLS handshake
+  failure, mixed public and private answer sets, IPv4-mapped private peers, cancellation
+  mid-stream.
+- Twenty-one of the design's 40 property suites exist, contributing 71 of the 876 tests:
+  suites 1 to 17, 20, 21, 38, and 39. Six unwritten suites belong to tasks that are
+  otherwise complete: 18, 19, 22, 23, 24, 25. The behaviour each of those six covers is
+  exercised by example-based tests instead. The remaining 13 unwritten suites belong to
+  tasks 13 through 18, which have not started.
+- 16.1 was satisfied minimally. Web Radar keeps its state in `ScanSession` plus a few
+  `st.session_state` keys rather than the versioned `SessionModel` the design specifies.
+
+Known product limits that the README must state plainly:
+
+- Images only, PNG and JPEG. No text, audio, or video.
+- The LSB watermark survives lossless handling and direct hotlinking. It does not survive
+  JPEG recompression, resizing, or cropping, so platforms that recompress uploads will
+  destroy it. This limit is not yet measured by a test.
+- Scanning reads one user-supplied page's static HTML. It is not a crawler and executes no
+  JavaScript, so JavaScript-rendered galleries yield nothing.
+- Strike dispatch opens a local `mailto:` draft behind seven attestations. There is no SMTP,
+  no background sending, and no automated legal action anywhere in the design.
+
 ## Tasks
 
 - [x] 1. Establish the Python project and deterministic toolchain
@@ -392,7 +435,7 @@ Implement Provenance as a Python package with a thin Streamlit shell, pure domai
     - Store one versioned SessionModel with operation nonces, forms, previews, fingerprints, acknowledgements, progress, focus target, one evidence lease, and volatile Forge output.
     - Ignore stale/duplicate callbacks, preserve inputs on validation failure, and permit at most one active scan and one strike investigation per session.
     - _Requirements: 1.1, 5.7, 8.3, 8.11, 13.2, 15.9, 19.3, 19.7-19.9, 21.1-21.3, 21.6_
-  - [ ] 16.2 Implement The Forge tab
+  - [x] 16.2 Implement The Forge tab
     - Render labeled inert metadata inputs, complete error summaries, progress/status, created/reused details, required output metrics, and the gated download from Forge services.
     - Never render user data as Markdown/HTML or expose output before matching registration.
     - _Requirements: 1.1, 2.6, 5.1, 5.6, 5.7, 19.1-19.3, 19.7, 19.8_
