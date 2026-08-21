@@ -216,17 +216,17 @@ Implement Provenance as a Python package with a thin Streamlit shell, pure domai
     - **Validates: Requirements 8.6, 18.5**
 
 - [ ] 10. Implement the pinned SSRF-safe HTTP, redirect, and robots stack
-  - [ ] 10.1 Implement immediate DNS resolution and pinned resolution values
+  - [x] 10.1 Implement immediate DNS resolution and pinned resolution values
     - Resolve immediately before every attempt, require a nonempty all-public A/AAAA set, share a single connection deadline across addresses, and expose no connection when policy fails.
     - _Requirements: 7.3, 7.6, 7.9, 8.12_
-  - [ ] 10.2 Implement the Requests-compatible pinned socket adapter
+  - [x] 10.2 Implement the Requests-compatible pinned socket adapter
     - Connect only to validated pinned addresses; verify public/equal peer before request bytes and again after TLS wrapping; preserve hostname SNI/certificate checks.
     - Disable proxies, `.netrc`, retries, pooling, cookies, and automatic redirects; stream bodies under next-byte/total/cancellation deadlines and charge bytes exactly once before retention.
     - _Requirements: 7.3, 7.5-7.9, 8.4-8.7, 8.10-8.13, 17.2_
-  - [ ] 10.3 Implement independent redirect validation
+  - [x] 10.3 Implement independent redirect validation
     - Resolve each Location against the response URL, apply all URL/DNS/public/peer checks anew, enforce five redirects, safely account/discard redirect bodies, and avoid forwarding credentials across origins.
     - _Requirements: 7.4, 7.9, 8.4, 8.6_
-  - [ ] 10.4 Implement robots retrieval and explicit unavailable decision flow
+  - [x] 10.4 Implement robots retrieval and explicit unavailable decision flow
     - Fetch origin `/robots.txt` with the same safe stack and user agent, enforce disallow before page access, and model unavailable continue/cancel controls while the scan deadline continues.
     - _Requirements: 8.1-8.3, 8.5, 8.11, 8.13_
   - [ ]* 10.5 Write network adapter, redirect, and robots contract tests

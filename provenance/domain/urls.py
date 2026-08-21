@@ -162,8 +162,14 @@ def remove_dot_segments(path: str) -> str:
     return joined
 
 
-def parse_absolute_url(text: str) -> Result[AbsoluteHttpUrl]:
-    """Accept an absolute HTTP or HTTPS URL, or report exactly why it was refused."""
+def parse_absolute_url(
+    text: str, *, allowed_ports: frozenset[int] = ALLOWED_PORTS
+) -> Result[AbsoluteHttpUrl]:
+    """Accept an absolute HTTP or HTTPS URL, or report exactly why it was refused.
+
+    ``allowed_ports`` exists so contract tests can reach a local server on an ephemeral
+    port. Production callers use the default, which permits only 80 and 443.
+    """
     if text.strip() == "":
         return _fail(FailureCode.MALFORMED_HOST, DETAIL_EMPTY_INPUT)
     if len(text) > MAX_URL_LENGTH:
@@ -188,7 +194,7 @@ def parse_absolute_url(text: str) -> Result[AbsoluteHttpUrl]:
     except ValueError:
         return _fail(FailureCode.PORT, DETAIL_BAD_PORT)
     port = DEFAULT_PORTS[scheme] if raw_port is None else int(raw_port)
-    if port not in ALLOWED_PORTS:
+    if port not in allowed_ports:
         return _fail(FailureCode.PORT, DETAIL_BAD_PORT)
 
     raw_host = split.hostname
@@ -207,7 +213,9 @@ def parse_absolute_url(text: str) -> Result[AbsoluteHttpUrl]:
     return ok(AbsoluteHttpUrl(scheme=scheme, host=host, port=port, path=path, query=split.query))
 
 
-def parse_page_input(text: str) -> Result[AbsoluteHttpUrl]:
+def parse_page_input(
+    text: str, *, allowed_ports: frozenset[int] = ALLOWED_PORTS
+) -> Result[AbsoluteHttpUrl]:
     """Accept a page URL, treating a bare hostname as an HTTPS root URL."""
     candidate = text.strip()
     if candidate == "":
@@ -216,24 +224,28 @@ def parse_page_input(text: str) -> Result[AbsoluteHttpUrl]:
     if "://" not in candidate:
         bare = candidate[:-1] if candidate.endswith("/") else candidate
         if _BARE_HOST.match(bare) is not None and "@" not in bare:
-            return parse_absolute_url(f"{SCHEME_HTTPS}://{bare}/")
-    return parse_absolute_url(candidate)
+            return parse_absolute_url(f"{SCHEME_HTTPS}://{bare}/", allowed_ports=allowed_ports)
+    return parse_absolute_url(candidate, allowed_ports=allowed_ports)
 
 
-def normalize_page_input(text: str) -> Result[NormalizedUrl]:
+def normalize_page_input(
+    text: str, *, allowed_ports: frozenset[int] = ALLOWED_PORTS
+) -> Result[NormalizedUrl]:
     """Accept and normalize a page URL in one step."""
-    parsed = parse_page_input(text)
+    parsed = parse_page_input(text, allowed_ports=allowed_ports)
     if parsed.failure is not None:
         return Result(failure=parsed.failure)
     return ok(parsed.unwrap().normalized)
 
 
-def resolve_candidate(base: NormalizedUrl, candidate: str) -> Result[AbsoluteHttpUrl]:
+def resolve_candidate(
+    base: NormalizedUrl, candidate: str, *, allowed_ports: frozenset[int] = ALLOWED_PORTS
+) -> Result[AbsoluteHttpUrl]:
     """Resolve a possibly relative image reference against the final page URL."""
     reference = candidate.strip()
     if reference == "":
         return _fail(FailureCode.MALFORMED_HOST, DETAIL_EMPTY_INPUT)
-    return parse_absolute_url(urljoin(base, reference))
+    return parse_absolute_url(urljoin(base, reference), allowed_ports=allowed_ports)
 
 
 def is_public_network_address(value: str) -> bool:
