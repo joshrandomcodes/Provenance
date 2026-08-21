@@ -11,10 +11,13 @@ from typing import Final
 import streamlit as st
 
 from provenance.application.forge import ForgeService
+from provenance.application.scan_session import ScanRunner
+from provenance.domain.time import Clock
 from provenance.infrastructure.sqlite.connection import RegistryStatus
 from provenance.settings import APPLICATION_VERSION, RuntimeSettings
 from provenance.ui import safe_render
 from provenance.ui.forge_view import render_forge_tab
+from provenance.ui.radar_view import render_radar_tab
 
 FORGE_TAB_LABEL: Final = "The Forge"
 RADAR_TAB_LABEL: Final = "Web Radar"
@@ -38,6 +41,8 @@ class Dashboard:
     settings: RuntimeSettings
     status: RegistryStatus
     forge: ForgeService
+    scanner: ScanRunner
+    clock: Clock
 
 
 def render_dashboard(dashboard: Dashboard) -> None:
@@ -52,11 +57,9 @@ def render_dashboard(dashboard: Dashboard) -> None:
         render_forge_tab(dashboard.forge, writes_enabled=dashboard.status.writable)
 
     with radar_tab:
-        st.header(RADAR_TAB_LABEL)
-        safe_render.caption(
-            "Run a bounded, user-initiated scan of one public page for your registered marks."
+        render_radar_tab(
+            dashboard.scanner, dashboard.clock, writes_enabled=dashboard.status.writable
         )
-        st.text(_PENDING_NOTICE)
 
     with triage_tab:
         st.header(TRIAGE_TAB_LABEL)

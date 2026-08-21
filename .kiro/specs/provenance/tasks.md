@@ -396,7 +396,7 @@ Implement Provenance as a Python package with a thin Streamlit shell, pure domai
     - Render labeled inert metadata inputs, complete error summaries, progress/status, created/reused details, required output metrics, and the gated download from Forge services.
     - Never render user data as Markdown/HTML or expose output before matching registration.
     - _Requirements: 1.1, 2.6, 5.1, 5.6, 5.7, 19.1-19.3, 19.7, 19.8_
-  - [ ] 16.3 Implement Web Radar tab
+  - [x] 16.3 Implement Web Radar tab
     - Render authorization acknowledgement, URL form, robots continue/cancel, live progress, cancellation, per-image outcomes, inert evidence, and complete/static-HTML-limited summaries.
     - Start network work only from the specific user control and keep Streamlit calls on the main thread.
     - _Requirements: 1.1, 8.3, 8.10, 8.11, 9.6, 9.8, 18.3, 19.1-19.4, 19.7-19.9, 21.1, 21.4-21.6_
