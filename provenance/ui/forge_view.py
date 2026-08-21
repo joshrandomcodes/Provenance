@@ -21,6 +21,7 @@ from provenance.ui.forge_presenter import (
     build_failure_view,
     build_success_view,
 )
+from provenance.ui.theme import render_intro
 
 FORM_KEY: Final = "forge_form"
 RESULT_KEY: Final = "forge_result"
@@ -33,16 +34,17 @@ POSTAL_LABEL: Final = "Postal address (optional)"
 RIGHTS_LABEL: Final = "Rights statement (optional)"
 SUBMIT_LABEL: Final = "Watermark and register"
 
-INTRO: Final = (
-    "Embed a cryptographic watermark in your image and record it in your local registry. "
-    "The image never leaves this computer."
+INTRO_LINES: Final = (
+    "Embed a cryptographic watermark in your own image.",
+    "The registration is recorded in your local registry.",
+    "The image never leaves this computer.",
 )
 
 
 def render_forge_tab(service: ForgeService, *, writes_enabled: bool) -> None:
     """Render the Forge tab and handle one submission per run."""
     st.header("The Forge")
-    safe_render.caption(INTRO)
+    render_intro("forge", INTRO_LINES)
 
     if not writes_enabled:
         st.error(

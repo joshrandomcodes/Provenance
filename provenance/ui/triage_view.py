@@ -30,11 +30,11 @@ from provenance.application.triage import (
 from provenance.domain.errors import Failure, FailureCode
 from provenance.ui import safe_render
 from provenance.ui.messages import label_for, message_for
+from provenance.ui.theme import render_intro
 from provenance.ui.triage_presenter import (
     EMPTY_ACTIVE_NOTE,
     EMPTY_FAIR_USE_NOTE,
-    EVIDENCE_NOTE,
-    PENDING_ACTIONS_NOTE,
+    INTRO_LINES,
     RATIONALE_PROMPT,
     EvidenceView,
     build_evidence_view,
@@ -84,8 +84,7 @@ def _forget(key: str) -> None:
 def render_triage_tab(service: TriageService, *, writes_enabled: bool) -> None:
     """Render the Incident Triage tab for one browser session."""
     st.header("Incident Triage")
-    safe_render.caption(EVIDENCE_NOTE)
-    safe_render.caption(PENDING_ACTIONS_NOTE)
+    render_intro("triage", INTRO_LINES)
 
     if not writes_enabled:
         st.error(DISABLED_NOTE)

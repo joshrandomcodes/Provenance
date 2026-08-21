@@ -24,3 +24,32 @@ magicEnabled = false
 
 [logger]
 level = "warning"
+
+# Original palette and type scale, inspired by seventh-generation console
+# dashboards. No third-party font, image, or asset is fetched: every value below is
+# a colour or a system font stack, so applying the theme makes no network request.
+[theme]
+base = "dark"
+primaryColor = "#4FB8FF"
+backgroundColor = "#05080F"
+secondaryBackgroundColor = "#0D1523"
+textColor = "#E8EEF7"
+linkColor = "#7FD1FF"
+codeBackgroundColor = "#0A1120"
+codeTextColor = "#BFD8F2"
+borderColor = "#1E2A3D"
+dataframeBorderColor = "#1E2A3D"
+dataframeHeaderBackgroundColor = "#0D1523"
+font = "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+headingFont = "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+codeFont = "'Cascadia Mono', Consolas, 'SFMono-Regular', Menlo, monospace"
+baseFontWeight = 300
+baseRadius = "0.35rem"
+buttonRadius = "0.25rem"
+showWidgetBorder = true
+showSidebarBorder = true
+
+[theme.sidebar]
+backgroundColor = "#080D18"
+secondaryBackgroundColor = "#101B2B"
+borderColor = "#1E2A3D"

@@ -1,0 +1,459 @@
+/*
+ * Provenance dashboard stylesheet.
+ *
+ * Original work. Inspired by the look of seventh-generation console dashboards:
+ * a deep gradient field that drifts slowly, thin light type with open letter
+ * spacing, dimmed inactive navigation with a glowing selection, and translucent
+ * panels separated by hairlines.
+ *
+ * Two rules hold everywhere in this file.
+ *
+ * 1. No remote resource. There is no @import, no url(), no web font, and no
+ *    image reference, so applying this stylesheet makes no network request. A
+ *    test asserts this mechanically.
+ * 2. Decoration only. Nothing here carries meaning that the text does not
+ *    already carry, and no value from a user, a file, or a scanned page can
+ *    reach this file. If a future Streamlit release changes its DOM and these
+ *    selectors stop matching, the app keeps working on the configured theme
+ *    palette alone.
+ *
+ * Motion is disabled for anyone who asks for reduced motion, at the end.
+ */
+
+:root {
+  --prov-ink: #e8eef7;
+  --prov-ink-dim: #93a7c2;
+  --prov-accent: #4fb8ff;
+  --prov-accent-soft: rgba(79, 184, 255, 0.16);
+  --prov-hairline: rgba(120, 160, 210, 0.18);
+  --prov-panel: rgba(13, 21, 35, 0.72);
+  --prov-glow: 0 0 18px rgba(79, 184, 255, 0.35);
+  --prov-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ---------------------------------------------------------------- background */
+
+/* Layered gradients stand in for the drifting wave. Three soft radial pools
+   over a vertical wash, animated by moving their positions rather than
+   repainting, which keeps it cheap. */
+[data-testid="stAppViewContainer"] {
+  background-color: #05080f;
+  background-image:
+    radial-gradient(120% 80% at 12% -10%, rgba(32, 86, 148, 0.55) 0%, rgba(5, 8, 15, 0) 60%),
+    radial-gradient(100% 70% at 88% 8%, rgba(18, 64, 120, 0.42) 0%, rgba(5, 8, 15, 0) 55%),
+    radial-gradient(140% 90% at 50% 108%, rgba(12, 48, 96, 0.5) 0%, rgba(5, 8, 15, 0) 62%),
+    linear-gradient(180deg, #060a14 0%, #04060d 55%, #05080f 100%);
+  background-size: 160% 160%, 150% 150%, 170% 170%, 100% 100%;
+  animation: prov-drift 48s var(--prov-ease) infinite alternate;
+}
+
+@keyframes prov-drift {
+  0% {
+    background-position: 0% 0%, 100% 0%, 50% 100%, 0% 0%;
+  }
+  50% {
+    background-position: 18% 12%, 82% 10%, 44% 88%, 0% 0%;
+  }
+  100% {
+    background-position: 6% 4%, 94% 2%, 56% 96%, 0% 0%;
+  }
+}
+
+[data-testid="stHeader"] {
+  background: transparent;
+  border-bottom: 1px solid var(--prov-hairline);
+}
+
+/* ------------------------------------------------------------------ typography */
+
+h1 {
+  font-weight: 200 !important;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 22px rgba(79, 184, 255, 0.28);
+}
+
+h2,
+h3 {
+  font-weight: 250 !important;
+  letter-spacing: 0.045em;
+  color: var(--prov-ink);
+}
+
+/* Section labels read as quiet chrome rather than content. */
+[data-testid="stCaptionContainer"] {
+  letter-spacing: 0.03em;
+  color: var(--prov-ink-dim) !important;
+}
+
+/* -------------------------------------------------------------- the tab row */
+
+/* The horizontal axis: every destination visible at once, inactive ones dimmed,
+   the selected one lit. */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 2.25rem;
+  border-bottom: 1px solid var(--prov-hairline);
+  padding-bottom: 0.15rem;
+  background: transparent;
+}
+
+.stTabs [data-baseweb="tab"] {
+  background: transparent;
+  padding: 0.35rem 0.15rem;
+  font-weight: 300;
+  font-size: 1.02rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--prov-ink-dim);
+  opacity: 0.62;
+  transition:
+    opacity 260ms var(--prov-ease),
+    color 260ms var(--prov-ease),
+    text-shadow 260ms var(--prov-ease),
+    transform 260ms var(--prov-ease);
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+  opacity: 0.9;
+  color: var(--prov-ink);
+  transform: translateY(-1px);
+}
+
+.stTabs [aria-selected="true"] {
+  opacity: 1;
+  color: #ffffff;
+  text-shadow: 0 0 16px rgba(79, 184, 255, 0.55);
+  transform: translateY(-1px);
+}
+
+.stTabs [data-baseweb="tab-highlight"] {
+  background: linear-gradient(90deg, rgba(79, 184, 255, 0) 0%, var(--prov-accent) 50%, rgba(79, 184, 255, 0) 100%);
+  height: 2px;
+  box-shadow: var(--prov-glow);
+}
+
+.stTabs [data-baseweb="tab-border"] {
+  background: transparent;
+}
+
+/* ---------------------------------------------------------------- the panels */
+
+/* Content arriving after a rerun settles in rather than snapping. */
+.stTabs [data-baseweb="tab-panel"] {
+  animation: prov-settle 420ms var(--prov-ease) both;
+}
+
+@keyframes prov-settle {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+[data-testid="stSidebar"] {
+  border-right: 1px solid var(--prov-hairline);
+  backdrop-filter: blur(6px);
+}
+
+[data-testid="stSidebar"] h2 {
+  font-size: 0.82rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--prov-ink-dim);
+}
+
+/* Bordered containers and expanders become translucent shelves. */
+[data-testid="stExpander"] {
+  background: var(--prov-panel);
+  border: 1px solid var(--prov-hairline);
+  backdrop-filter: blur(4px);
+}
+
+[data-testid="stExpander"] summary:hover {
+  color: var(--prov-accent);
+}
+
+/* Hairlines that fade at both ends. */
+hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(120, 160, 210, 0) 0%,
+    rgba(120, 160, 210, 0.32) 22%,
+    rgba(120, 160, 210, 0.32) 78%,
+    rgba(120, 160, 210, 0) 100%
+  );
+}
+
+/* --------------------------------------------------------------- the controls */
+
+.stButton > button,
+.stDownloadButton > button,
+.stFormSubmitButton > button {
+  background: linear-gradient(180deg, rgba(28, 48, 78, 0.85) 0%, rgba(14, 26, 46, 0.85) 100%);
+  border: 1px solid var(--prov-hairline);
+  color: var(--prov-ink);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  transition:
+    transform 180ms var(--prov-ease),
+    border-color 180ms var(--prov-ease),
+    box-shadow 220ms var(--prov-ease),
+    background 220ms var(--prov-ease);
+}
+
+.stButton > button:hover:not(:disabled),
+.stDownloadButton > button:hover:not(:disabled),
+.stFormSubmitButton > button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: rgba(79, 184, 255, 0.6);
+  box-shadow: var(--prov-glow);
+  background: linear-gradient(180deg, rgba(38, 66, 106, 0.92) 0%, rgba(18, 34, 60, 0.92) 100%);
+}
+
+.stButton > button:active:not(:disabled),
+.stDownloadButton > button:active:not(:disabled),
+.stFormSubmitButton > button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.stButton > button:disabled,
+.stFormSubmitButton > button:disabled {
+  opacity: 0.42;
+}
+
+/* Every focusable thing gets the same unmistakable ring. Keyboard users are not
+   an afterthought here: this is the only focus indicator, so it has to be loud. */
+:focus-visible {
+  outline: 2px solid var(--prov-accent) !important;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------- the evidence */
+
+/* Retrieved text is quoted in a recessed slab with an accent edge, so it reads
+   as something the page said rather than something Provenance concluded. */
+[data-testid="stCode"],
+pre {
+  background: rgba(6, 12, 24, 0.9) !important;
+  border: 1px solid var(--prov-hairline);
+  border-left: 2px solid rgba(79, 184, 255, 0.55);
+  box-shadow: inset 0 1px 12px rgba(0, 0, 0, 0.45);
+}
+
+/* Status messages: flat translucent slabs with a coloured edge, never a wash. */
+[data-testid="stAlert"] {
+  background: var(--prov-panel);
+  border: 1px solid var(--prov-hairline);
+  border-left-width: 3px;
+  backdrop-filter: blur(4px);
+}
+
+/* Progress and spinners inherit the accent from the theme palette; only the
+   track needs quieting. */
+[data-testid="stProgress"] > div > div {
+  background-color: rgba(120, 160, 210, 0.14);
+}
+
+/* Text rows are dense lists of labelled facts, so tighten them slightly. */
+[data-testid="stText"] {
+  line-height: 1.5;
+  letter-spacing: 0.012em;
+}
+
+/* ------------------------------------------------------- introductory lines */
+
+/*
+ * Each tab opens with a few short authored lines inside a container created with
+ * a key, which Streamlit marks with a matching class. That class is the only hook
+ * used here, so no other text on the page is animated.
+ *
+ * The reveal is a clip animated in discrete steps, which reads as text being typed
+ * rather than faded in, and the lines are staggered so one finishes before the next
+ * begins. The hidden state lives in the keyframes rather than in the rule, with
+ * backwards fill supplying it during the delay. That ordering matters: if animation
+ * is switched off for any reason the text is simply visible, never stuck clipped.
+ */
+[class*="st-key-prov-intro"] [data-testid="stCaptionContainer"] {
+  animation: prov-type 900ms steps(32, end) both;
+}
+
+[class*="st-key-prov-intro"] [data-testid="stElementContainer"]:nth-of-type(2)
+  [data-testid="stCaptionContainer"] {
+  animation-delay: 820ms;
+}
+
+[class*="st-key-prov-intro"] [data-testid="stElementContainer"]:nth-of-type(3)
+  [data-testid="stCaptionContainer"] {
+  animation-delay: 1640ms;
+}
+
+@keyframes prov-type {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* A caret after the final line, drawn as a block rather than a character so no
+   assistive technology has extra text to announce. */
+[class*="st-key-prov-intro"] [data-testid="stElementContainer"]:last-of-type
+  [data-testid="stCaptionContainer"] p::after {
+  content: "";
+  display: inline-block;
+  width: 0.45ch;
+  height: 0.95em;
+  margin-left: 0.35ch;
+  vertical-align: -0.12em;
+  background: var(--prov-accent);
+  box-shadow: var(--prov-glow);
+  animation: prov-caret 1.15s 2.4s infinite;
+  opacity: 0;
+}
+
+/* Slow enough to read as a cursor rather than a warning, and it never flashes: the
+   contrast swing is a soft accent against a dark panel. */
+@keyframes prov-caret {
+  0%,
+  49% {
+    opacity: 0.95;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ------------------------------------------------------------ the status rail */
+
+/* The sidebar is the only always-on surface, so it carries the idle motion: a
+   breathing edge, a heading that brightens and dims, and a highlight that travels
+   down the border. All three are slow and low contrast by design. */
+[data-testid="stSidebar"] {
+  position: relative;
+  animation: prov-edge 6s ease-in-out infinite;
+}
+
+@keyframes prov-edge {
+  0%,
+  100% {
+    border-right-color: rgba(120, 160, 210, 0.18);
+  }
+  50% {
+    border-right-color: rgba(79, 184, 255, 0.42);
+  }
+}
+
+[data-testid="stSidebar"] h2 {
+  animation: prov-breathe 5s ease-in-out infinite;
+}
+
+@keyframes prov-breathe {
+  0%,
+  100% {
+    color: var(--prov-ink-dim);
+    text-shadow: 0 0 0 rgba(79, 184, 255, 0);
+  }
+  50% {
+    color: var(--prov-ink);
+    text-shadow: 0 0 14px rgba(79, 184, 255, 0.45);
+  }
+}
+
+[data-testid="stSidebar"]::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -1px;
+  width: 1px;
+  height: 20%;
+  background: linear-gradient(180deg, rgba(79, 184, 255, 0), var(--prov-accent), rgba(79, 184, 255, 0));
+  animation: prov-scan 7.5s linear infinite;
+  pointer-events: none;
+  opacity: 0;
+}
+
+@keyframes prov-scan {
+  0% {
+    transform: translateY(-25%);
+    opacity: 0;
+  }
+  14% {
+    opacity: 0.55;
+  }
+  86% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateY(500%);
+    opacity: 0;
+  }
+}
+
+/* --------------------------------------------------------- reveal on scroll */
+
+/* Scroll-driven timelines are a progressive enhancement. Where they are not
+   supported the guard skips the whole block and cards are simply present. */
+@supports (animation-timeline: view()) {
+  [data-testid="stExpander"],
+  [data-testid="stAlert"],
+  [data-testid="stCode"] {
+    animation: prov-rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 45%;
+  }
+}
+
+@keyframes prov-rise {
+  from {
+    opacity: 0.35;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ------------------------------------------------------------ reduced motion */
+
+/* Everything above is decoration, so all of it stops here. Nothing in this file
+   flashes: the fastest cycle is the caret at roughly one hertz, well under the
+   three-per-second threshold, and it can be stopped by this preference. */
+@media (prefers-reduced-motion: reduce) {
+  [data-testid="stAppViewContainer"],
+  [data-testid="stSidebar"],
+  [data-testid="stSidebar"] h2,
+  [data-testid="stExpander"],
+  [data-testid="stAlert"],
+  [data-testid="stCode"],
+  [class*="st-key-prov-intro"] [data-testid="stCaptionContainer"] {
+    animation: none;
+  }
+
+  .stTabs [data-baseweb="tab-panel"] {
+    animation: none;
+  }
+
+  [data-testid="stSidebar"]::after,
+  [class*="st-key-prov-intro"] [data-testid="stElementContainer"]:last-of-type
+    [data-testid="stCaptionContainer"] p::after {
+    display: none;
+  }
+
+  .stTabs [data-baseweb="tab"],
+  .stButton > button,
+  .stDownloadButton > button,
+  .stFormSubmitButton > button {
+    transition: none;
+    transform: none;
+  }
+}

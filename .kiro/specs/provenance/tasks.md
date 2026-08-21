@@ -43,8 +43,41 @@ Deliberately still open, with reasons:
   instead, including exact whitelist scope and fair-use upsert and removal, which
   `tests/test_triage_service.py` covers by example. The remaining 11 unwritten suites
   belong to tasks that have not started.
-- 16.1 was satisfied minimally. Web Radar keeps its state in `ScanSession` plus a few
-  `st.session_state` keys rather than the versioned `SessionModel` the design specifies.
+- 16.1 was satisfied minimally. Web Radar and Incident Triage keep their state in their own
+  objects plus a few `st.session_state` keys rather than the versioned `SessionModel` the
+  design specifies. The behaviours that requirement protects are implemented and tested:
+  one active scan per session, inputs preserved on validation failure, and confirmations
+  refused once stale.
+- 17.1 is half done, and the two halves are unrelated in practice. The inert rendering
+  helpers are complete and load-bearing: `provenance/ui/safe_render.py` is the only path
+  by which untrusted values reach the screen, and `unsafe_allow_html=True` appears nowhere.
+  The allow-listed local diagnostics sink is not implemented. `provenance/ports/logger.py`
+  declares the protocol and no adapter satisfies it, so `PROVENANCE_ENABLE_LOCAL_DIAGNOSTIC_LOG`
+  is recognised and writes nothing. The sidebar and the README both say so.
+- 18.1 and 18.3 are substantially done and left unchecked deliberately. The composition
+  root wires real clocks, SQLite, the pinned network stack, every application service, and
+  all three tabs, and `tests/test_composition_root_isolation.py` proves it cannot import a
+  test fixture. It cannot wire WHOIS, the draft adapter, or redacted logging because those
+  do not exist. `scripts/run_checks.py` is the one-shot deterministic gate for lint,
+  format, strict types, and the full suite; it does not yet cover the browser
+  accessibility suite or a package build, and 19 of the 40 property suites are unwritten.
+- Styling was added ahead of 16.5 and is deliberately narrow. The dashboard palette lives
+  in `.streamlit/config.toml` and one static stylesheet lives at `provenance/ui/theme.css`,
+  attached by `provenance/ui/theme.py` as a `pathlib.Path` so no runtime value can reach
+  the document. `tests/test_theme.py` asserts the stylesheet references no remote resource,
+  contains no element or handler syntax, honours `prefers-reduced-motion`, and that no
+  other module inserts HTML or touches JavaScript. This is decoration only: every fact the
+  interface states is still stated in text through `safe_render`, so if a Streamlit release
+  changes its DOM the app degrades to the configured palette rather than losing meaning.
+  The visual style is an original interpretation and contains no third-party asset.
+- Motion was added within the same boundary and stays inside requirement 19's limits. Each
+  tab's opening lines reveal in sequence through a stepped clip, the sidebar breathes and
+  carries a travelling highlight, and panels rise on scroll where the browser supports
+  scroll-driven timelines. Nothing flashes: the fastest cycle is roughly one hertz, well
+  under the three-per-second threshold, and `prefers-reduced-motion` stops all of it. Two
+  tests protect the mechanism, one checking that every animation names a defined keyframes
+  block and one checking that a reveal's hidden state lives only in keyframes, since a clip
+  written into a rule would leave text permanently hidden once animation is switched off.
 
 Known product limits that the README must state plainly:
 

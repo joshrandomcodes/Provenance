@@ -36,6 +36,7 @@ from provenance.ui.radar_presenter import (
     build_report_view,
     build_robots_rows,
 )
+from provenance.ui.theme import render_intro
 
 SESSION_KEY: Final = "radar_session"
 ACK_KEY: Final = "radar_acknowledged"
@@ -44,9 +45,10 @@ ERROR_KEY: Final = "radar_input_error"
 
 POLL_SECONDS: Final = 1.0
 
-INTRO: Final = (
-    "Check one public page for your registered images. Provenance fetches the page and its "
-    "images directly from this computer, reads only static HTML, and stores no image data."
+INTRO_LINES: Final = (
+    "Check one public page for your registered images.",
+    "The page and its images are fetched directly from this computer.",
+    "Only static HTML is read, and no image data is stored.",
 )
 
 ACK_LABEL: Final = (
@@ -68,7 +70,7 @@ BOUNDS_NOTE: Final = (
 def render_radar_tab(runner: ScanRunner, clock: Clock, *, writes_enabled: bool) -> None:
     """Render the Web Radar tab for one browser session."""
     st.header("Web Radar")
-    safe_render.caption(INTRO)
+    render_intro("radar", INTRO_LINES)
     safe_render.caption(BOUNDS_NOTE)
 
     if not writes_enabled:

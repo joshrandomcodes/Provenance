@@ -19,6 +19,7 @@ from provenance.settings import APPLICATION_VERSION, RuntimeSettings
 from provenance.ui import safe_render
 from provenance.ui.forge_view import render_forge_tab
 from provenance.ui.radar_view import render_radar_tab
+from provenance.ui.theme import apply_theme
 from provenance.ui.triage_view import render_triage_tab
 
 FORGE_TAB_LABEL: Final = "The Forge"
@@ -47,6 +48,7 @@ class Dashboard:
 def render_dashboard(dashboard: Dashboard) -> None:
     """Render the dashboard shell and its tabs."""
     st.set_page_config(page_title="Provenance", layout="wide")
+    apply_theme()
     st.title("Provenance")
     safe_render.caption(_SCOPE_NOTICE)
 
@@ -79,9 +81,13 @@ def _render_local_status(dashboard: Dashboard) -> None:
         safe_render.labelled("Schema version", str(status.schema_version))
         safe_render.labelled("Outbound user agent", settings.user_agent)
         st.text("Telemetry, analytics, cloud storage, remote logging: disabled")
+        # The redacting diagnostics sink is specified but not implemented, so the
+        # switch being on must not be reported as a working log.
         safe_render.labelled(
             "Local diagnostic log",
-            "enabled" if settings.local_diagnostic_log_enabled else "disabled",
+            "requested, not implemented in this build"
+            if settings.local_diagnostic_log_enabled
+            else "disabled",
         )
 
         if status.guidance is not None:

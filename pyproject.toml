@@ -36,7 +36,7 @@ dev = [
 include = ["provenance*"]
 
 [tool.setuptools.package-data]
-provenance = ["py.typed"]
+provenance = ["py.typed", "ui/theme.css"]
 
 [tool.ruff]
 line-length = 100

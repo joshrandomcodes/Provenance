@@ -66,8 +66,11 @@ look again.
 - A hard budget on every scan: bytes, images, pixels, redirects, and time.
 - Scraped image bytes are never written to disk. Pixels for at most one incident are held in
   memory at a time, behind a lease.
-- Untrusted text renders through a text-only helper. `unsafe_allow_html` appears nowhere in the
-  application, so a scraped caption cannot become markup, a link, or a remote image request.
+- Untrusted text renders through a text-only helper. `unsafe_allow_html=True` appears nowhere in
+  the application, so a scraped caption cannot become markup, a link, or a remote image request.
+- The only markup in the app is one static stylesheet, passed to Streamlit as a file path so no
+  runtime value can reach the document. Tests assert that the stylesheet references no remote
+  resource and that no other module inserts HTML.
 - SQLite in STRICT mode with checksum-verified migrations, a startup integrity gate, and one
   audit event per material action.
 
@@ -139,9 +142,31 @@ On first run Provenance creates its registry outside the source tree:
 - Linux: `$XDG_DATA_HOME/provenance/registry.sqlite3`, or `~/.local/share/provenance/`
 - macOS: `~/.local/share/provenance/registry.sqlite3`
 
-Set `PROVENANCE_HOME` to put it somewhere else. Set
-`PROVENANCE_ENABLE_LOCAL_DIAGNOSTIC_LOG=1` to enable local-only diagnostic file logging, which
-is off by default.
+Set `PROVENANCE_HOME` to put it somewhere else.
+
+`PROVENANCE_ENABLE_LOCAL_DIAGNOSTIC_LOG` is recognised but does nothing yet. The redacting
+diagnostics sink is specified in the design and declared as a port, and no adapter implements
+it, so setting the variable creates an empty `diagnostics` directory and writes no records. The
+sidebar says so rather than reporting a log that does not exist.
+
+### Look and feel
+
+The dashboard is themed through `.streamlit/config.toml` plus one stylesheet at
+`provenance/ui/theme.css`: a deep drifting gradient, thin widely spaced type, dimmed navigation
+with a lit selection, and translucent panels on hairline rules. The visual style is inspired by
+seventh-generation console dashboards. Every rule is original CSS using system font stacks, and
+the stylesheet references no font, image, or remote resource of any kind, which a test enforces.
+
+Each tab opens with a few short lines that reveal in sequence, stepped rather than faded, with a
+caret on the last one. The sidebar carries the idle motion: a breathing edge, a heading that
+brightens and dims, and a highlight travelling down the border. Where the browser supports
+scroll-driven animations, panels rise as they enter view.
+
+All of it is decoration and none of it is load-bearing. Nothing flashes: the fastest cycle is the
+caret at about one hertz, well below the three-per-second accessibility threshold, and every
+animation stops when the operating system asks for reduced motion. Values still render as plain
+text, so if a future Streamlit release changes its DOM the styling degrades to the configured
+palette without losing a single fact.
 
 ## Usage
 
@@ -355,6 +380,11 @@ specified in [`design.md`](.kiro/specs/provenance/design.md).
 The artwork in [`docs/`](docs/) and on the test page is the author's own original work. No
 third-party images, datasets, or assets are included in this repository.
 
+The dashboard's visual style is an original interpretation inspired by seventh-generation console
+dashboards. No font, icon, image, sound, trademark, or other asset from any console manufacturer
+is used, referenced, or distributed here. `provenance/ui/theme.css` is hand-written CSS over
+system font stacks.
+
 ## Security notes
 
 - The dashboard binds to `127.0.0.1` and has no authentication, because it is a
@@ -362,6 +392,11 @@ third-party images, datasets, or assets are included in this repository.
   it behind a public reverse proxy; nothing in it is built to be multi-tenant or authenticated.
 - No secrets, API keys, or credentials are required or stored. `.streamlit/secrets.toml` is
   gitignored and unused.
+- Styling is the only markup in the app. `provenance/ui/theme.css` is a static asset handed to
+  `st.html` as a `pathlib.Path`, never as a runtime string, so no value from a user, a file, or a
+  scanned page can reach the document. Streamlit sanitizes it and ignores JavaScript by default,
+  and this codebase never opts in. `tests/test_theme.py` asserts all of that, including that no
+  other module inserts HTML and that the stylesheet fetches nothing.
 - The registry lives outside the source tree and is never committed.
 - Environment proxy variables are deliberately ignored, since a proxy would break address
   pinning and defeat the peer verification that prevents requests reaching private hosts.
@@ -375,8 +410,7 @@ Everything needed is free and in this repository.
 
 1. Follow [Setup](#setup), then [Running it](#running-it). Clone, create a virtual environment,
    install pinned dependencies, run one launcher script.
-2. **No login and no credentials.** There is no account system, so there is nothing to issue
-   test credentials for.
+2. **No login and no credentials.** There is no account system, so there is nothing to issue test credentials for.
 3. Scan <https://joshrandomcodes.github.io/Provenance/>. That page is published from
    [`docs/`](docs/) in this repository and shows the author's own watermarked image presented
    as a print for sale. On a fresh machine this demonstrates discovery, download, and watermark

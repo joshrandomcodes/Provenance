@@ -73,6 +73,12 @@ PENDING_ACTIONS_NOTE: Final = (
     "is the only decision Provenance can record today."
 )
 
+INTRO_LINES: Final = (
+    "Everything here is evidence for your review.",
+    "It does not determine ownership, infringement, or fair use.",
+    PENDING_ACTIONS_NOTE,
+)
+
 EMPTY_ACTIVE_NOTE: Final = (
     "No active incidents. Run a scan from Web Radar to check a page for your registered images."
 )
