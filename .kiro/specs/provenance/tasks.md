@@ -243,15 +243,15 @@ Implement Provenance as a Python package with a thin Streamlit shell, pure domai
     - **Validates: Requirements 7.4, 7.9**
 
 - [ ] 11. Implement static image discovery, context extraction, and volatile evidence
-  - [ ] 11.1 Implement bounded static HTML discovery and context extraction
+  - [x] 11.1 Implement bounded static HTML discovery and context extraction
     - Parse only bounded static HTML; visit `img` elements in document order and evaluate nonempty `src`, left-to-right `srcset`, then `data-src`.
     - Resolve, validate, normalize, and first-occurrence deduplicate at most 100 URLs; associate exact title, preceding heading, enclosing figcaption, alt text, and bounded ecommerce evidence with each origin element.
     - _Requirements: 9.1-9.3, 9.6, 18.4, 21.5_
-  - [ ] 11.2 Implement in-memory image analysis and evidence lease lifecycle
+  - [x] 11.2 Implement in-memory image analysis and evidence lease lifecycle
     - Validate media type and pixel limits, fully decode in memory, extract one typed outcome, and release network bytes/arrays unless held by the single selected incident lease.
     - Ensure scan completion, cancellation, selection change, reset, and teardown revoke the appropriate leases without files, temp files, persistent caches, or diagnostic serialization.
     - _Requirements: 9.4, 9.5, 9.7, 17.3, 17.5, 17.6, 18.1_
-  - [ ]* 11.3 Write discovery, context, image-analysis, and lifecycle tests
+  - [x]* 11.3 Write discovery, context, image-analysis, and lifecycle tests
     - Cover malformed candidates/srcset, order/deduplication, exact context ownership, ecommerce evidence, media/decode/pixel failures, one failure per URL, and memory release events.
     - Assert no image bytes reach SQLite, files, temp directories, Streamlit caches, or logs.
     - _Requirements: 9.1-9.7, 17.3, 17.5, 17.6, 18.1_
@@ -265,15 +265,15 @@ Implement Provenance as a Python package with a thin Streamlit shell, pure domai
     - **Validates: Requirements 9.3, 9.6**
 
 - [ ] 12. Implement scan orchestration, Registry cross-validation, and incident persistence
-  - [ ] 12.1 Implement the user-initiated Scan service and scheduler
+  - [x] 12.1 Implement the user-initiated Scan service and scheduler
     - Require the session acknowledgement, perform robots/page discovery before image scheduling, coordinate one active worker/cancellation token/progress queue, and preserve completed results under per-image failure or terminal budget/cancel states.
     - Label live failures exactly, never substitute simulated evidence, and produce all required summary counts, bytes, elapsed time, static-HTML limitation text, and completion state.
     - _Requirements: 1.5, 1.6, 8.1-8.13, 18.1-18.5, 18.9, 21.1, 21.5, 21.6_
-  - [ ] 12.2 Implement payload cross-validation and per-image incident commits
+  - [x] 12.2 Implement payload cross-validation and per-image incident commits
     - Query by extracted Asset_Hash, require Creator_ID equality, distinguish verified/unregistered/no/corrupt results, and commit one deduplicated incident only for completed verified images.
     - Apply exact whitelist scope and preserve previously committed incidents when later image work fails or the scan terminates.
     - _Requirements: 9.5, 10.1-10.7, 18.1, 18.2, 18.9, 20.20_
-  - [ ]* 12.3 Write scan orchestration and failure-isolation integration tests
+  - [x]* 12.3 Write scan orchestration and failure-isolation integration tests
     - Cover page-level no-write failures, robots decisions, per-image continuation, cancellation races, completed-incident preservation, exact summary counts, Registry matching, whitelist suppression, and no production fallback evidence.
     - _Requirements: 1.5, 1.6, 8.1-8.13, 9.5, 10.1-10.7, 18.1-18.5, 18.9_
   - [ ]* 12.4 Write property test for terminal scan categories

@@ -100,6 +100,9 @@ USER_MESSAGES: Final = {
     FailureCode.WHOIS_LIMIT: "The WHOIS response exceeded its size or time limit.",
     FailureCode.DEPENDENCY_INCOMPATIBLE: "A required local component is not compatible.",
     FailureCode.STALE_CONFIRMATION: "The content changed after you confirmed it. Confirm again.",
+    FailureCode.MISSING_ACKNOWLEDGEMENT: (
+        "Confirm you are authorized to scan this page before starting."
+    ),
     FailureCode.MISSING_ATTESTATION: "Every confirmation is required before sending.",
     FailureCode.DRAFT_UNAVAILABLE: "No email draft could be opened on this computer.",
     FailureCode.DRAFT_CANCELLED: "The email draft was not opened.",

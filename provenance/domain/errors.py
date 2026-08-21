@@ -79,6 +79,7 @@ class FailureCode(StrEnum):
 
     # Confirmation and dispatch
     STALE_CONFIRMATION = "stale_confirmation"
+    MISSING_ACKNOWLEDGEMENT = "missing_acknowledgement"
     MISSING_ATTESTATION = "missing_attestation"
     DRAFT_UNAVAILABLE = "draft_unavailable"
     DRAFT_CANCELLED = "draft_cancelled"

@@ -19,6 +19,7 @@ from provenance.domain.errors import FailureCode, Result, failed, ok
 from provenance.domain.models import (
     MAX_UPLOAD_BYTES,
     DecodedSource,
+    ImageFacts,
     MediaType,
 )
 from provenance.domain.validation import validate_dimensions
@@ -32,18 +33,16 @@ class PillowImageDecoder:
 
     __slots__ = ()
 
-    def decode(self, data: bytes, *, operation: str = "decode_image") -> Result[DecodedSource]:
-        """Decode image bytes, returning a typed failure on any rejection."""
+    def inspect(self, data: bytes, *, operation: str = "inspect_image") -> Result[ImageFacts]:
+        """Read format and dimensions from the header without decoding a full frame."""
         if len(data) == 0:
             return failed(FailureCode.EMPTY_FILE, operation)
         if len(data) > MAX_UPLOAD_BYTES:
             return failed(FailureCode.BYTE_LIMIT, operation)
 
         header = self._inspect_header(data, operation)
-        if not header.is_ok:
-            return failed(
-                header.unwrap_failure().code, operation, fields=header.unwrap_failure().fields
-            )
+        if header.failure is not None:
+            return Result(failure=header.failure)
 
         media_type, width, height = header.unwrap()
         dimension_report = validate_dimensions(width, height)
@@ -51,7 +50,16 @@ class PillowImageDecoder:
             first = dimension_report.issues[0]
             return failed(first.code, operation, fields=dimension_report.issues)
 
-        return self._decode_pixels(data, media_type, width, height, operation)
+        return ok(ImageFacts(media_type=media_type, width=width, height=height))
+
+    def decode(self, data: bytes, *, operation: str = "decode_image") -> Result[DecodedSource]:
+        """Decode image bytes, returning a typed failure on any rejection."""
+        facts = self.inspect(data, operation=operation)
+        if facts.failure is not None:
+            return Result(failure=facts.failure)
+
+        header = facts.unwrap()
+        return self._decode_pixels(data, header.media_type, header.width, header.height, operation)
 
     def _inspect_header(self, data: bytes, operation: str) -> Result[tuple[MediaType, int, int]]:
         try:

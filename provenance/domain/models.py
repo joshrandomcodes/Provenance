@@ -144,6 +144,23 @@ class UploadMetadata:
 
 
 @dataclass(frozen=True, slots=True)
+class ImageFacts:
+    """Container facts read from an image header before any full-frame allocation.
+
+    Exists so a caller can enforce a pixel budget before a decode allocates memory.
+    """
+
+    media_type: MediaType
+    width: int
+    height: int
+
+    @property
+    def pixel_count(self) -> int:
+        """Pixels a full decode would allocate."""
+        return self.width * self.height
+
+
+@dataclass(frozen=True, slots=True)
 class DecodedSource:
     """A fully decoded source image in eight-bit RGB with optional alpha."""
 
