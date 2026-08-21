@@ -168,49 +168,49 @@ Implement Provenance as a Python package with a thin Streamlit shell, pure domai
     - Create `test_property_39_material_actions.py`.
     - **Validates: Requirements 18.6, 18.7, 18.8**
 
-- [ ] 7. Assemble the Forge application workflow
-  - [ ] 7.1 Implement Forge preparation orchestration
+- [x] 7. Assemble the Forge application workflow
+  - [x] 7.1 Implement Forge preparation orchestration
     - Compose validation, bounded decode, canonical hashing, one-time UTC payload creation, serialization, capacity enforcement, embedding, and PNG round-trip verification into a volatile artifact.
     - Drop incomplete bytes on every failure and perform no Registry mutation during preparation.
     - _Requirements: 2.1-2.5, 3.1-3.8, 4.1-4.11, 5.5, 5.7_
-  - [ ] 7.2 Implement atomic Forge registration and download readiness
+  - [x] 7.2 Implement atomic Forge registration and download readiness
     - Register only a successfully encoded artifact, expose download only after matching create/reuse, sanitize the source stem, and return all required registration/capacity details.
     - Clear the artifact on conflict/failure and never expose an unregistered download.
     - _Requirements: 5.1-5.7, 17.2, 17.4_
-  - [ ]* 7.3 Write Forge service and Registry integration tests
+  - [x]* 7.3 Write Forge service and Registry integration tests
     - Test success, reused records with changed submitted metadata, identity conflict, exact-capacity output, encoding failure, commit failure, rollback, artifact release, filename sanitization, and download gating.
     - _Requirements: 2.1-2.5, 3.1-3.8, 4.1-4.11, 5.1-5.7_
 
-### Checkpoint - Ensure Registry and Forge tests pass
+### Checkpoint - Ensure Registry and Forge tests pass (passed)
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Implement URL parsing, normalization, and public-address policy
-  - [ ] 8.1 Implement strict HTTP(S) URL values and normalization
+- [x] 8. Implement URL parsing, normalization, and public-address policy
+  - [x] 8.1 Implement strict HTTP(S) URL values and normalization
     - Convert bare domains to HTTPS root URLs; reject credentials, malformed hosts, invalid percent escapes, unsupported schemes, and disallowed ports before DNS.
     - IDNA-normalize hosts, remove default ports/fragments, resolve dot segments, map empty paths to `/`, and preserve path case and query bytes.
     - Implement public unicast IP classification including IPv4-mapped IPv6 exclusions.
     - _Requirements: 7.1, 7.2, 7.6, 7.8, 9.2, 12.4, 12.5_
-  - [ ]* 8.2 Write unit tests for URL and address edge cases
+  - [x]* 8.2 Write unit tests for URL and address edge cases
     - Cover IDNA, IPv4/IPv6/mapped addresses, userinfo, effective ports, dot segments, fragments, path case, query bytes, malformed hosts, percent escapes, and every excluded address class.
     - _Requirements: 7.1-7.3, 7.6, 7.8, 9.2, 12.4, 12.5_
-  - [ ]* 8.3 Write property test for normalization idempotence
+  - [x]* 8.3 Write property test for normalization idempotence
     - **Property 17: URL normalization is idempotent**
     - Create `test_property_17_url_normalization.py`.
     - **Validates: Requirements 7.1, 7.2, 9.2, 12.4, 20.13**
 
-- [ ] 9. Implement scan budgets, accounting, cancellation, and terminal summaries
-  - [ ] 9.1 Implement monotonic Scan_Budget and outcome reducers
+- [x] 9. Implement scan budgets, accounting, cancellation, and terminal summaries
+  - [x] 9.1 Implement monotonic Scan_Budget and outcome reducers
     - Enforce every HTML/image/total byte, image count, pixel, redirect, connect, next-byte, and total elapsed limit with exact pre-retention accounting.
     - Model scheduling stop, outstanding cancellation, completed preservation, attempted terminal categories, skipped candidates, progress snapshots, and complete/incomplete summaries.
     - _Requirements: 8.4-8.12, 18.1, 18.3-18.5, 18.9_
-  - [ ]* 9.2 Write unit and state-machine tests for budget boundaries
+  - [x]* 9.2 Write unit and state-machine tests for budget boundaries
     - Cover declared lengths, sentinel reads, arbitrary chunking, count/pixel boundaries, robots pause time, redirect attempts, cancellation timing, summary arithmetic, and one terminal category per attempted image.
     - _Requirements: 8.4-8.12, 18.1, 18.3-18.5, 18.9_
-  - [ ]* 9.3 Write property test that scan hard limits are never exceeded
+  - [x]* 9.3 Write property test that scan hard limits are never exceeded
     - **Property 20: Scan hard limits are never exceeded**
     - Create `test_property_20_scan_limits.py` with generated event sequences and monotonic clocks.
     - **Validates: Requirements 8.4, 8.5, 8.7-8.11, 20.17**
-  - [ ]* 9.4 Write property test for chunk-invariant byte accounting
+  - [x]* 9.4 Write property test for chunk-invariant byte accounting
     - **Property 21: Byte accounting is invariant under chunking**
     - Create `test_property_21_byte_accounting.py`.
     - **Validates: Requirements 8.6, 18.5**
