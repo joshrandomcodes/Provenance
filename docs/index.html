@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aperture Print Shop &mdash; Original Artwork</title>
+<style>
+  :root {
+    --ink: #1a1a1a;
+    --muted: #5f6368;
+    --line: #e2e2e4;
+    --accent: #0b5f4a;
+    --page: #fbfbf9;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding: 3rem 1.5rem 4rem;
+    background: var(--page);
+    color: var(--ink);
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header { border-bottom: 1px solid var(--line); padding-bottom: 1.25rem; margin-bottom: 2.5rem; }
+
+  .shop {
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.5rem;
+  }
+
+  h1 { font-size: 1.9rem; line-height: 1.2; margin: 0; font-weight: 650; }
+
+  figure {
+    margin: 0;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.25rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+
+  figure img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    background: #f2f2ef;
+  }
+
+  figcaption {
+    margin-top: 1.1rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+
+  .price {
+    margin: 0.4rem 0 1.25rem;
+    font-size: 1.35rem;
+    font-weight: 650;
+    color: var(--accent);
+  }
+
+  button {
+    font: inherit;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: 0;
+    border-radius: 6px;
+    padding: 0.7rem 1.4rem;
+    cursor: pointer;
+  }
+
+  button:hover { background: #094c3b; }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  footer p { margin: 0.4rem 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="shop">Aperture Print Shop</p>
+    <h1>Featured Prints</h1>
+  </header>
+
+  <figure>
+    <img src="artwork.png" alt="Original artwork by the creator">
+    <figcaption>Original artwork, digital, 2026</figcaption>
+    <p class="price">Price: $250.00</p>
+    <button type="button">Add to cart</button>
+  </figure>
+
+  <footer>
+    <p>
+      This page exists only to test Provenance against a page the project author controls.
+    </p>
+    <p>
+      The artwork is the author's own work and carries a Provenance watermark.
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>
