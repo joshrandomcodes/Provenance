@@ -76,6 +76,11 @@ def _default_socket_factory(family: int) -> socket.socket:
     return socket.socket(family, socket.SOCK_STREAM)
 
 
+def host_header(url: AbsoluteHttpUrl) -> str:
+    """The ``Host`` field value: authority without a default port."""
+    return url.host if url.uses_default_port else f"{url.host}:{url.port}"
+
+
 @dataclass(frozen=True, slots=True)
 class TransportSettings:
     """Identity and timing for outbound requests."""
@@ -86,22 +91,27 @@ class TransportSettings:
 
 
 class PinnedResponse:
-    """A response whose body is only readable through a budget lease."""
+    """A response whose body is only readable through a budget lease.
 
-    __slots__ = ("_head", "_raw", "_connection", "_socket", "_budget", "_probe", "_closed")
+    This object owns the socket outright. Response parsing uses ``HTTPResponse`` directly
+    rather than ``HTTPConnection``, because ``HTTPConnection.getresponse`` closes the
+    caller's socket whenever the peer answers with ``Connection: close`` -- which every
+    request here invites. Owning the socket is what keeps the per-chunk next-byte deadline
+    enforceable for the whole body.
+    """
+
+    __slots__ = ("_head", "_raw", "_socket", "_budget", "_probe", "_closed")
 
     def __init__(
         self,
         head: ResponseHead,
         raw: http.client.HTTPResponse,
-        connection: http.client.HTTPConnection,
         active_socket: socket.socket,
         budget: ScanBudget,
         probe: TransportProbe,
     ) -> None:
         self._head = head
         self._raw = raw
-        self._connection = connection
         self._socket = active_socket
         self._budget = budget
         self._probe = probe
@@ -119,7 +129,7 @@ class PinnedResponse:
                 if self._budget.check_continue().failure is not None:
                     return
                 size = lease.next_read_size(DEFAULT_CHUNK_SIZE)
-                self._socket.settimeout(self._next_byte_timeout())
+                self._set_next_byte_deadline()
                 chunk = self._raw.read(size)
                 if chunk == b"":
                     return
@@ -143,7 +153,7 @@ class PinnedResponse:
 
                 allowance = lease.remaining
                 size = lease.next_read_size(DEFAULT_CHUNK_SIZE)
-                self._socket.settimeout(self._next_byte_timeout())
+                self._set_next_byte_deadline()
                 try:
                     chunk = self._raw.read(size)
                 except TimeoutError:
@@ -170,16 +180,28 @@ class PinnedResponse:
             self.close()
 
     def close(self) -> None:
-        """Close the response, connection, and socket exactly once."""
+        """Close the response and socket exactly once."""
         if self._closed:
             return
         self._closed = True
-        for closer in (self._raw.close, self._connection.close, self._socket.close):
+        for closer in (self._raw.close, self._socket.close):
             try:
                 closer()
             except OSError:
                 continue
         self._probe.record(STAGE_CLOSED)
+
+    def _set_next_byte_deadline(self) -> None:
+        """Restart the next-byte interval before each read.
+
+        Tolerates a socket the peer has already torn down: the response file object holds
+        its own reference and may still have buffered bytes to yield, so a failure to set
+        the timeout must not end the read.
+        """
+        try:
+            self._socket.settimeout(self._next_byte_timeout())
+        except OSError:
+            return
 
     def _next_byte_timeout(self) -> float:
         return max(
@@ -344,34 +366,34 @@ class PinnedHttpTransport:
     def _send(
         self, request: SafeRequest, active_socket: socket.socket, budget: ScanBudget
     ) -> Result[PinnedResponse]:
-        url = request.url
+        """Write the request and parse only the response head.
+
+        The request bytes are written directly and the response is parsed with
+        ``HTTPResponse``, so this socket is never handed to a connection object that might
+        close it. ``HTTPConnection`` does exactly that when the peer answers
+        ``Connection: close``, which left the next-byte deadline unenforceable.
+        """
         prepared = self._prepare(request)
-        connection = http.client.HTTPConnection(url.host, url.port)
-        connection.sock = active_socket
+        method = prepared.method or request.method
 
         try:
             active_socket.settimeout(
                 max(0.001, min(self._settings.next_byte_seconds, budget.seconds_remaining))
             )
-            connection.request(
-                prepared.method or request.method,
-                prepared.path_url,
-                headers=dict(prepared.headers),
-            )
+            active_socket.sendall(self._request_bytes(request, prepared))
             self._probe.record(STAGE_REQUEST_SENT)
-            raw = connection.getresponse()
+
+            raw = http.client.HTTPResponse(active_socket, method=method)
+            raw.begin()
         except TimeoutError:
-            connection.close()
             active_socket.close()
             return failed(FailureCode.READ_TIMEOUT, FETCH_OPERATION)
         except http.client.HTTPException:
-            connection.close()
             active_socket.close()
             return failed(
                 FailureCode.HTTP_STATUS, FETCH_OPERATION, safe_detail=DETAIL_BAD_STATUS_LINE
             )
         except OSError:
-            connection.close()
             active_socket.close()
             return failed(
                 FailureCode.HTTP_STATUS, FETCH_OPERATION, safe_detail=DETAIL_REQUEST_FAILED
@@ -383,12 +405,28 @@ class PinnedHttpTransport:
             PinnedResponse(
                 head=head,
                 raw=raw,
-                connection=connection,
                 active_socket=active_socket,
                 budget=budget,
                 probe=self._probe,
             )
         )
+
+    def _request_bytes(self, request: SafeRequest, prepared: requests.PreparedRequest) -> bytes:
+        """Serialize one request line and its headers.
+
+        ``Host`` is emitted without the port when the port is the scheme default, as
+        RFC 9110 requires. Name-based hosts route on the exact value, so an unnecessary
+        ``:443`` can be answered with the wrong site or refused outright.
+        """
+        method = prepared.method or request.method
+        target = prepared.path_url
+        lines = [f"{method} {target} HTTP/1.1", f"Host: {host_header(request.url)}"]
+        lines.extend(
+            f"{name}: {value}" for name, value in prepared.headers.items() if name.lower() != "host"
+        )
+        # Header field values are ASCII by construction: a fixed user agent, a fixed
+        # encoding, and a percent-encoded request target.
+        return ("\r\n".join(lines) + "\r\n\r\n").encode("latin-1")
 
     def _prepare(self, request: SafeRequest) -> requests.PreparedRequest:
         headers: dict[str, str] = {

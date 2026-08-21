@@ -110,6 +110,9 @@ class ScriptedRoute:
     delay_before_body: float = 0.0
     omit_content_length: bool = False
     overstate_content_length: int | None = None
+    # Real servers honour our `Connection: close` request header and echo it. Python's
+    # BaseHTTPRequestHandler does not, which hid a production-only defect.
+    announce_close: bool = False
 
 
 class ScriptedServer:
@@ -162,6 +165,8 @@ class ScriptedServer:
                     return
 
                 self.send_response(route.status)
+                if route.announce_close:
+                    self.send_header("Connection", "close")
                 for key, value in route.headers.items():
                     self.send_header(key, value)
                 if route.overstate_content_length is not None:

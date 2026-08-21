@@ -16,6 +16,7 @@ from provenance.infrastructure.network.pinned_transport import (
     DETAIL_PEER_NOT_PINNED,
     PinnedHttpTransport,
     TransportSettings,
+    host_header,
 )
 from provenance.ports.dns import ResolvedAddress
 from provenance.ports.http import (
@@ -355,3 +356,80 @@ class _RedirectingSocket(socket.socket):
 
     def connect(self, address: object) -> None:
         super().connect((LOOPBACK, self._actual_port))
+
+
+def test_a_body_reads_when_the_peer_announces_connection_close() -> None:
+    """Regression: a peer echoing `Connection: close` must not break the body read.
+
+    Every request advertises `Connection: close`, so real servers answer with it. Handing
+    the socket to `HTTPConnection` meant `getresponse` closed it before the body was read,
+    which raised OSError on the next-byte deadline. The socket is owned here instead.
+    """
+    body = b"User-agent: *\nDisallow:\n"
+    routes = {"/robots.txt": ScriptedRoute(body=body, announce_close=True)}
+    with scripted_server(routes) as server:
+        clock = ManualClock()
+        budget = build_budget(clock)
+        transport = build_transport(clock)
+
+        response = transport.fetch(
+            SafeRequest(url=server.url("/robots.txt"), kind=ResponseKind.ROBOTS), budget
+        ).unwrap()
+        lease = budget.open_response(ResponseKind.ROBOTS)
+
+        assert response.read_body(lease).unwrap() == body
+        assert budget.total_bytes == len(body)
+
+
+def test_a_streamed_body_survives_an_announced_connection_close() -> None:
+    body = b"z" * 5_000
+    routes = {"/page": ScriptedRoute(body=body, announce_close=True)}
+    with scripted_server(routes) as server:
+        clock = ManualClock()
+        budget = build_budget(clock)
+        transport = build_transport(clock)
+
+        response = transport.fetch(
+            SafeRequest(url=server.url("/page"), kind=ResponseKind.PAGE), budget
+        ).unwrap()
+        lease = budget.open_response(ResponseKind.PAGE)
+        collected = b"".join(response.stream(lease))
+
+        assert collected == body
+
+
+def test_the_host_header_omits_a_default_port() -> None:
+    """RFC 9110: the port is omitted when it is the scheme default.
+
+    Name-based virtual hosts route on the exact value, so an unnecessary `:443` can be
+    answered with the wrong site. Asserted on the value the transport computes, because
+    the scripted server necessarily listens on a non-default port.
+    """
+    assert host_header(AbsoluteHttpUrl(scheme="https", host="a.example", port=443, path="/")) == (
+        "a.example"
+    )
+    assert host_header(AbsoluteHttpUrl(scheme="http", host="a.example", port=80, path="/")) == (
+        "a.example"
+    )
+
+
+def test_the_host_header_keeps_a_non_default_port() -> None:
+    assert (
+        host_header(AbsoluteHttpUrl(scheme="https", host="a.example", port=80, path="/"))
+        == "a.example:80"
+    )
+
+
+def test_the_request_carries_exactly_one_host_header() -> None:
+    with scripted_server({"/page": ScriptedRoute()}) as server:
+        clock = ManualClock()
+        transport = build_transport(clock)
+
+        transport.fetch(
+            SafeRequest(url=server.url("/page"), kind=ResponseKind.PAGE), build_budget(clock)
+        ).unwrap().close()
+
+        _path, headers = server.requests[0]
+
+        assert headers["Host"] == f"{LOOPBACK}:{server.port}"
+        assert "Cookie" not in headers
