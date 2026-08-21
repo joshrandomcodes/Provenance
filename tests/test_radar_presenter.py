@@ -249,6 +249,12 @@ def test_the_summary_reports_bytes_and_elapsed_time() -> None:
     assert labels["Elapsed"] == "3.2 s"
 
 
+def test_large_downloads_are_reported_in_mebibytes() -> None:
+    view = build_report_view(_report(summary=_summary(total_bytes=10_075_000)))
+
+    assert dict(view.summary_rows)["Downloaded"] == "9.61 MiB"
+
+
 def test_a_page_failure_is_reported_with_a_safe_message() -> None:
     failure = Failure(code=FailureCode.CONNECT_TIMEOUT, operation="run_scan")
 

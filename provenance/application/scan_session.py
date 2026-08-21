@@ -19,10 +19,13 @@ Requirements: 8.3, 8.10, 8.11, 18.1, 18.3, 19.9, 21.1, 21.6
 from __future__ import annotations
 
 import queue
+import sys
 import threading
+import traceback
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import Path
 from typing import Final, Protocol
 
 from provenance.application.scan import (
@@ -44,6 +47,24 @@ JOIN_TIMEOUT_SECONDS: Final = 5.0
 DETAIL_ALREADY_RUNNING: Final = "scan_already_running"
 DETAIL_NOT_PAUSED: Final = "scan_not_awaiting_robots_decision"
 DETAIL_WORKER_CRASHED: Final = "scan_worker_failed"
+
+
+def _trace_worker_crash(error: BaseException) -> None:
+    """Write the failing location to this machine's stderr and nowhere else.
+
+    An exception message can quote scanned page content, so only the exception type and
+    the call frames are written. No message, argument, or value is included, and nothing
+    leaves this computer.
+    """
+    frames = traceback.extract_tb(error.__traceback__)
+    trail = " <- ".join(
+        f"{Path(frame.filename).name}:{frame.lineno} in {frame.name}" for frame in reversed(frames)
+    )
+    print(  # noqa: T201 - local operator diagnostic for an otherwise invisible crash
+        f"[provenance] scan worker crashed: {type(error).__name__} at {trail}",
+        file=sys.stderr,
+        flush=True,
+    )
 
 
 class ScanRunner(Protocol):
@@ -253,12 +274,13 @@ class ScanSession:
         def body() -> None:
             try:
                 target()
-            except Exception:  # noqa: BLE001 - a worker crash must not vanish silently
+            except Exception as error:  # noqa: BLE001 - a crash must not vanish silently
+                _trace_worker_crash(error)
                 self._finish_failed(
                     Failure(
                         code=FailureCode.INTERNAL_ERROR,
                         operation=SESSION_OPERATION,
-                        safe_detail=DETAIL_WORKER_CRASHED,
+                        safe_detail=f"{DETAIL_WORKER_CRASHED}:{type(error).__name__}",
                     )
                 )
 

@@ -173,21 +173,46 @@ def find_ecommerce_evidence(fields: Sequence[str | None]) -> tuple[str, ...]:
 
 
 def _indicator_spans(text: str) -> list[tuple[int, int]]:
-    """Every indicator match in one field, ordered by position then length."""
-    spans: list[tuple[int, int]] = []
+    """Every indicator in one field as non-overlapping spans, ordered by position.
 
+    Nearby matches are merged. A price label beside its amount beside an "add to cart"
+    control are one piece of evidence, and reporting them separately would repeat the same
+    sentence once per match.
+    """
+    spans: list[tuple[int, int]] = []
     for pattern in (*_MARKUP_PATTERNS, *_PHRASE_PATTERNS):
         spans.extend((match.start(), match.end()) for match in pattern.finditer(text))
-
     spans.sort()
-    return spans
+
+    merged: list[tuple[int, int]] = []
+    for start, end in spans:
+        # Two matches merge when their display windows would overlap.
+        if merged and start - merged[-1][1] <= SNIPPET_RADIUS * 2:
+            first, last = merged[-1]
+            merged[-1] = (first, max(last, end))
+            continue
+        merged.append((start, end))
+    return merged
 
 
 def _snippet(text: str, start: int, end: int) -> str:
-    """A bounded window around one match, suitable for inert literal display."""
+    """A bounded window around one match, trimmed to whole words where it was cut."""
     left = max(0, start - SNIPPET_RADIUS)
     right = min(len(text), end + SNIPPET_RADIUS)
-    return text[left:right].strip()[:MAX_EVIDENCE_LENGTH]
+    window = text[left:right]
+
+    # A window that begins or ends mid-word reads as corrupted text, so the partial word
+    # is dropped. The match itself sits at least one radius inside the window.
+    if left > 0:
+        _head, separator, remainder = window.partition(" ")
+        if separator:
+            window = remainder
+    if right < len(text):
+        cut = window.rfind(" ")
+        if cut > 0:
+            window = window[:cut]
+
+    return window.strip()[:MAX_EVIDENCE_LENGTH]
 
 
 def bounded_values(values: Iterable[str], *, limit: int = MAX_EVIDENCE_LENGTH) -> tuple[str, ...]:

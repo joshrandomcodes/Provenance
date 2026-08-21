@@ -66,8 +66,15 @@ ROBOTS_PROMPT: Final = (
 )
 
 
-def _kilobytes(value: int) -> str:
-    return f"{value / 1024:.1f} KiB"
+KIB: Final = 1024
+MIB: Final = 1024 * 1024
+
+
+def _byte_size(value: int) -> str:
+    """A readable byte count, scaled so large downloads stay legible."""
+    if value >= MIB:
+        return f"{value / MIB:.2f} MiB"
+    return f"{value / KIB:.1f} KiB"
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,7 +178,7 @@ def _summary_rows(report: ScanReport) -> tuple[tuple[str, str], ...]:
         rows.append(("Discovered but not checked", str(summary.skipped)))
     if report.capped:
         rows.append(("Beyond the unique image limit", str(report.capped)))
-    rows.append(("Downloaded", _kilobytes(summary.total_response_bytes)))
+    rows.append(("Downloaded", _byte_size(summary.total_response_bytes)))
     rows.append(("Elapsed", f"{summary.elapsed_seconds:.1f} s"))
     return tuple(rows)
 
@@ -226,6 +233,6 @@ def build_progress_rows(progress: ScanProgress | None) -> tuple[tuple[str, str],
     return (
         ("Discovered", str(progress.discovered)),
         ("Checked", str(progress.completed)),
-        ("Downloaded", _kilobytes(progress.total_bytes)),
+        ("Downloaded", _byte_size(progress.total_bytes)),
         ("Elapsed", f"{progress.elapsed_seconds:.0f} s"),
     )

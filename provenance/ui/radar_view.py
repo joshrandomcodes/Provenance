@@ -191,6 +191,11 @@ def _render_outcome(session: ScanSession, snapshot: SessionSnapshot) -> None:
     if snapshot.failure is not None:
         st.subheader("Scan did not run")
         safe_render.text(message_for(snapshot.failure))
+        # Safe category and a bounded technical detail. Both are fixed vocabulary, never
+        # scanned content, and they are what makes a local failure diagnosable.
+        safe_render.labelled("Failure category", snapshot.failure.code.value)
+        if snapshot.failure.safe_detail is not None:
+            safe_render.labelled("Technical detail", snapshot.failure.safe_detail)
         _clear_button(session)
         return
 

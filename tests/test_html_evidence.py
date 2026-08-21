@@ -155,6 +155,26 @@ def test_overlapping_matches_collapse_to_one_snippet() -> None:
     assert len(find_ecommerce_evidence(("Price: $10",))) == 1
 
 
+def test_nearby_matches_merge_into_one_piece_of_evidence() -> None:
+    """A caption, price, and buy control in one block are one finding, not three."""
+    evidence = find_ecommerce_evidence(
+        ("Original artwork, digital, 2026 Price: $250.00 Add to cart",)
+    )
+
+    assert len(evidence) == 1
+    assert "Price: $250.00" in evidence[0]
+    assert "Add to cart" in evidence[0]
+
+
+def test_a_trimmed_window_does_not_begin_mid_word() -> None:
+    prefix = "Collectors have described this particular original artwork as remarkable"
+    evidence = find_ecommerce_evidence((f"{prefix} and it is listed at $250.00 today",))
+
+    assert len(evidence) == 1
+    assert not evidence[0].startswith("le")
+    assert evidence[0].split(" ", 1)[0] in prefix + " and it is listed at $250.00 today"
+
+
 def test_distinct_matches_in_one_field_are_reported_separately() -> None:
     padding = " " * 200
     evidence = find_ecommerce_evidence((f"Buy now{padding}Total 99 EUR",))
