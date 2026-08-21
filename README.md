@@ -261,8 +261,8 @@ macOS and Linux:
 .venv/bin/python scripts/run_checks.py
 ```
 
-As of 21 August 2026 that reports ruff lint and format clean, strict mypy clean under
-`--strict`, and the whole deterministic suite passing in roughly two minutes.
+As of 21 August 2026 that reports ruff lint and format clean across 122 files, strict mypy clean
+across 118 source files, and **931 tests passing** in about two minutes ten seconds.
 
 Tests only:
 

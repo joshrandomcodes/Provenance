@@ -10,9 +10,9 @@ Verified end to end on a live public page: an image is forged and registered, th
 a GitHub Pages URL discovers it, extracts the watermark, cross-checks the Registry, and
 records one incident with its page context and commerce evidence.
 
-The deterministic gate is green as of this date: ruff lint and format clean, strict mypy
-clean, and the whole deterministic suite passing in about two minutes. Run it with
-`python scripts\run_checks.py`.
+The deterministic gate is green as of this date: ruff lint and format clean across 122
+files, strict mypy clean across 118 source files, and 931 tests passing in about two
+minutes ten seconds. Run it with `python scripts\run_checks.py`.
 
 Complete: tasks 1 through 9 in full, 10.1 to 10.4, 11.1 to 11.3, 12.1 to 12.3, 13.1, 13.2,
 16.2, 16.3.
